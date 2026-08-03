@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h2 class="fw-bold text-primary mb-1"><i class="bi bi-speedometer2 me-2"></i>Admin Dashboard</h2>
+            <p class="text-muted mb-0">Overview of Hospital Operations</p>
+        </div>
+        <div class="col-md-6 text-md-end mt-3 mt-md-0">
+            <a href="{{ url_for('admin.reports') }}" class="btn btn-primary rounded-pill px-4 me-2 shadow-sm"><i class="bi bi-download me-2"></i>Generate Reports</a>
+            <a href="{{ url_for('admin.settings') }}" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm"><i class="bi bi-gear me-2"></i>Settings</a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-primary text-white h-100 rounded-4 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="bg-white bg-opacity-25 rounded p-2"><i class="bi bi-people fs-4"></i></div>
+                        <span class="badge bg-white text-primary rounded-pill px-3 py-2">Users</span>
+                    </div>
+                    <h3 class="fw-bold mb-1">{{ stats.active_users }} Active</h3>
+                    <p class="mb-0 text-white-50 small">Total Accounts</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-success text-white h-100 rounded-4 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="bg-white bg-opacity-25 rounded p-2"><i class="bi bi-file-earmark-medical fs-4"></i></div>
+                        <span class="badge bg-white text-success rounded-pill px-3 py-2">Total</span>
+                    </div>
+                    <h3 class="fw-bold mb-1">{{ stats.total_prescriptions }}</h3>
+                    <p class="mb-0 text-white-50 small">Prescriptions Issued</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-info text-white h-100 rounded-4 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="bg-white bg-opacity-25 rounded p-2"><i class="bi bi-calendar-check fs-4"></i></div>
+                        <span class="badge bg-white text-info rounded-pill px-3 py-2">Today</span>
+                    </div>
+                    <h3 class="fw-bold mb-1">{{ stats.today_appointments }}</h3>
+                    <p class="mb-0 text-white-50 small">Clinic Appointments</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-warning text-dark h-100 rounded-4 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="bg-dark bg-opacity-10 rounded p-2"><i class="bi bi-qr-code-scan fs-4"></i></div>
+                        <span class="badge bg-dark text-white rounded-pill px-3 py-2">Today</span>
+                    </div>
+                    <h3 class="fw-bold mb-1">{{ stats.today_qr_scans }}</h3>
+                    <p class="mb-0 text-dark text-opacity-75 small">QR Scans</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Row -->
+    <div class="row g-4 mb-4">
+        
+        <!-- Breakdown Chart -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
+                    <h5 class="fw-bold text-dark mb-0">System Activity Trend (7 Days)</h5>
+                </div>
+                <div class="card-body p-4">
+                    <canvas id="activityChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Entity Counts -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
+                    <h5 class="fw-bold text-dark mb-0">Entity Breakdown</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary bg-opacity-10 text-primary rounded p-2 me-3"><i class="bi bi-person-badge fs-5"></i></div>
+                            <h6 class="mb-0 fw-bold">Doctors</h6>
+                        </div>
+                        <h4 class="mb-0 fw-bold text-primary">{{ stats.total_doctors }}</h4>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-success bg-opacity-10 text-success rounded p-2 me-3"><i class="bi bi-person-heart fs-5"></i></div>
+                            <h6 class="mb-0 fw-bold">Patients</h6>
+                        </div>
+                        <h4 class="mb-0 fw-bold text-success">{{ stats.total_patients }}</h4>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-info bg-opacity-10 text-info rounded p-2 me-3"><i class="bi bi-prescription2 fs-5"></i></div>
+                            <h6 class="mb-0 fw-bold">Pharmacists</h6>
+                        </div>
+                        <h4 class="mb-0 fw-bold text-info">{{ stats.total_pharmacists }}</h4>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-warning bg-opacity-10 text-warning rounded p-2 me-3"><i class="bi bi-capsule fs-5"></i></div>
+                            <h6 class="mb-0 fw-bold">Meds Dispensed (Today)</h6>
+                        </div>
+                        <h4 class="mb-0 fw-bold text-warning">{{ stats.today_dispensed }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Audit Logs -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold text-dark mb-0">Recent System Logs</h5>
+                    <a href="{{ url_for('admin.audit_logs') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">View All</a>
+                </div>
+                <div class="card-body p-0 mt-3">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light text-muted">
+                                <tr>
+                                    <th class="ps-4">Time</th>
+                                    <th>User</th>
+                                    <th>Action</th>
+                                    <th>Details</th>
+                                    <th class="pe-4">IP Address</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in recent_logs %}
+                                <tr>
+                                    <td class="ps-4 text-muted small">{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                    <td>
+                                        {% if log.user %}
+                                            <span class="badge bg-light text-dark border">{{ log.user.username }}</span>
+                                        {% else %}
+                                            <span class="text-muted">System</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><span class="fw-bold">{{ log.action }}</span></td>
+                                    <td class="text-muted">{{ log.details }}</td>
+                                    <td class="pe-4 text-muted small">{{ log.ip_address }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">No recent logs found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    fetch("{{ url_for('admin.analytics_data') }}")
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('activityChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        {
+                            label: 'Prescriptions Issued',
+                            data: data.prescriptions,
+                            borderColor: '#198754',
+                            backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Appointments',
+                            data: data.appointments,
+                            borderColor: '#0d6efd',
+                            backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'top' } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+        });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-primary mb-1"><i class="bi bi-capsule me-2"></i>Dispense Medicines</h2>
+            <p class="text-muted mb-0">Manage and log dispensing for Prescription #{{ prescription.uuid[:8] | upper }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('pharmacist.dashboard') }}" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm">
+                <i class="bi bi-arrow-left me-2"></i>Dashboard
+            </a>
+            <a href="{{ url_for('pharmacist.prescription_pdf', uuid=prescription.uuid) }}" class="btn btn-danger rounded-pill px-4 shadow-sm" target="_blank">
+                <i class="bi bi-printer me-2"></i>Print Prescription
+            </a>
+        </div>
+    </div>
+
+    <!-- Status Banner -->
+    {% if prescription.status == 'Cancelled' %}
+    <div class="alert alert-danger shadow-sm border-0 rounded-4 d-flex align-items-center p-4 mb-4">
+        <i class="bi bi-exclamation-octagon-fill fs-1 me-4"></i>
+        <div>
+            <h4 class="mb-1 fw-bold">Prescription Cancelled</h4>
+            <p class="mb-0">This prescription has been revoked. Medicines cannot be dispensed.</p>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-success shadow-sm border-0 rounded-4 d-flex align-items-center p-4 mb-4 bg-success bg-opacity-10 text-success">
+        <i class="bi bi-shield-check fs-1 me-4"></i>
+        <div>
+            <h4 class="mb-1 fw-bold">Verified Authentic Prescription</h4>
+            <p class="mb-0 text-success opacity-75">Issued on {{ prescription.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+        </div>
+        <div class="ms-auto">
+            {% if prescription.status == 'Active' %}
+                <span class="badge bg-primary rounded-pill px-3 py-2 fs-6">Active</span>
+            {% else %}
+                <span class="badge bg-secondary rounded-pill px-3 py-2 fs-6">{{ prescription.status }}</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row g-4 mb-4">
+        <!-- Patient Info Card -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
+                    <h6 class="text-uppercase fw-bold text-primary mb-0"><i class="bi bi-person-badge me-2"></i>Patient Information</h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3 fs-3" style="width: 60px; height: 60px;">
+                            {{ prescription.patient.full_name[0] }}
+                        </div>
+                        <div>
+                            <h5 class="mb-1 fw-bold"><a href="{{ url_for('pharmacist.patient_view', patient_id=prescription.patient.patient_id) }}" class="text-decoration-none text-dark">{{ prescription.patient.full_name }}</a></h5>
+                            <span class="badge bg-light text-dark border">ID: {{ prescription.patient.patient_uid }}</span>
+                        </div>
+                    </div>
+                    <ul class="list-unstyled text-muted mb-0">
+                        <li class="mb-2"><i class="bi bi-telephone me-2"></i>{{ prescription.patient.phone or 'N/A' }}</li>
+                        <li class="mb-2"><i class="bi bi-calendar me-2"></i>Age: {{ prescription.patient.age }} | Gender: {{ prescription.patient.gender }}</li>
+                        <li><i class="bi bi-geo-alt me-2"></i>{{ prescription.patient.city or 'Address not specified' }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Doctor & Clinical Info Card -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
+                    <h6 class="text-uppercase fw-bold text-primary mb-0"><i class="bi bi-heart-pulse me-2"></i>Clinical Details</h6>
+                </div>
+                <div class="card-body p-4">
+                    <h5 class="mb-1 fw-bold text-dark">Dr. {{ prescription.doctor.full_name }}</h5>
+                    <p class="text-muted mb-3 small"><i class="bi bi-award me-1"></i>Reg: {{ prescription.doctor.registration_number }} | {{ prescription.doctor.specialization }}</p>
+                    
+                    <div class="bg-light rounded p-3 mb-3">
+                        <p class="mb-1 text-muted small fw-bold text-uppercase">Diagnosis</p>
+                        <p class="mb-0 fw-medium">{{ prescription.diagnosis or 'Not specified' }}</p>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between text-muted small">
+                        <span><strong>Follow-up:</strong> {{ prescription.follow_up_date.strftime('%B %d, %Y') if prescription.follow_up_date else 'None' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Counseling Guide Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="accordion shadow-sm" id="aiCounselingAccordion">
+                <div class="accordion-item border-primary border-opacity-25 rounded-3 overflow-hidden">
+                    <h2 class="accordion-header" id="headingAICounseling">
+                        <button class="accordion-button collapsed bg-primary bg-opacity-10 text-primary fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAICounseling" aria-expanded="false" aria-controls="collapseAICounseling" onclick="loadAICounseling('{{ prescription.uuid }}')">
+                            <i class="bi bi-robot me-2 fs-5"></i> Generate AI Counseling Guide
+                        </button>
+                    </h2>
+                    <div id="collapseAICounseling" class="accordion-collapse collapse" aria-labelledby="headingAICounseling" data-bs-parent="#aiCounselingAccordion">
+                        <div class="accordion-body bg-light">
+                            <div id="aiLoadingIndicator" class="text-center py-4 d-none">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2 text-muted small">Generating structured AI counseling guide...</p>
+                            </div>
+                            <div id="aiExplanationContent" class="text-dark d-none" style="white-space: pre-wrap; font-size: 0.95rem;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dispensing Form -->
+    <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="card shadow-sm border-0 rounded-4 mb-4 overflow-hidden">
+            <div class="card-header bg-primary text-white py-3 border-0">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-list-check me-2"></i>Medicine Checklist</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light text-muted">
+                            <tr>
+                                <th class="ps-4">Medicine & Instructions</th>
+                                <th>Dosage & Duration</th>
+                                <th>Dispense Qty</th>
+                                <th>Status</th>
+                                <th class="pe-4">Pharmacist Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for rx_med in prescription.medicines %}
+                            <tr>
+                                <td class="ps-4 py-3">
+                                    <h6 class="fw-bold text-dark mb-1">{{ rx_med.medicine.medicine_name }}</h6>
+                                    <div class="small text-muted mb-1">{{ rx_med.strength }} {{ rx_med.medicine_type }} | {{ rx_med.route or 'Oral' }}</div>
+                                    {% if rx_med.instructions %}
+                                    <div class="small bg-warning bg-opacity-10 text-dark px-2 py-1 rounded d-inline-block mt-1">
+                                        <i class="bi bi-info-circle me-1"></i>{{ rx_med.instructions }}
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="fw-medium text-dark">{{ rx_med.dosage }} ({{ rx_med.frequency }})</div>
+                                    <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ rx_med.duration }} | {{ rx_med.food_relation }}</small>
+                                </td>
+                                <td>
+                                    {% if prescription.status != 'Cancelled' %}
+                                    <div class="input-group input-group-sm w-75">
+                                        <input type="number" name="med_qty_{{ rx_med.id }}" class="form-control text-center" min="0" placeholder="0" {% if rx_med.dispense_status == 'Fully Dispensed' %}disabled{% endif %}>
+                                    </div>
+                                    {% else %}
+                                    <span class="badge bg-light text-muted border">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if prescription.status != 'Cancelled' %}
+                                    <select name="med_status_{{ rx_med.id }}" class="form-select form-select-sm fw-medium 
+                                        {% if rx_med.dispense_status == 'Fully Dispensed' %}text-success
+                                        {% elif rx_med.dispense_status == 'Partially Dispensed' %}text-info
+                                        {% elif rx_med.dispense_status == 'Not Available' %}text-danger
+                                        {% else %}text-warning{% endif %}" 
+                                        {% if rx_med.dispense_status == 'Fully Dispensed' %}disabled{% endif %}>
+                                        <option value="Pending" {% if rx_med.dispense_status == 'Pending' %}selected{% endif %}>Pending</option>
+                                        <option value="Partially Dispensed" {% if rx_med.dispense_status == 'Partially Dispensed' %}selected{% endif %}>Partially</option>
+                                        <option value="Fully Dispensed" {% if rx_med.dispense_status == 'Fully Dispensed' %}selected{% endif %}>Fully Dispensed</option>
+                                        <option value="Not Available" {% if rx_med.dispense_status == 'Not Available' %}selected{% endif %}>Out of Stock</option>
+                                        <option value="Cancelled" {% if rx_med.dispense_status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                                    </select>
+                                    {% if rx_med.dispense_status == 'Fully Dispensed' %}
+                                    <input type="hidden" name="med_status_{{ rx_med.id }}" value="Fully Dispensed">
+                                    {% endif %}
+                                    {% else %}
+                                        {% if rx_med.dispense_status == 'Fully Dispensed' %}
+                                            <span class="badge bg-success rounded-pill">Fully Dispensed</span>
+                                        {% elif rx_med.dispense_status == 'Partially Dispensed' %}
+                                            <span class="badge bg-info rounded-pill">Partially Dispensed</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary rounded-pill">{{ rx_med.dispense_status }}</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td class="pe-4">
+                                    {% if prescription.status != 'Cancelled' %}
+                                    <input type="text" name="med_remarks_{{ rx_med.id }}" class="form-control form-control-sm bg-light" placeholder="Optional notes..." {% if rx_med.dispense_status == 'Fully Dispensed' %}disabled{% endif %}>
+                                    {% else %}
+                                    <span class="text-muted small">N/A</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% if prescription.status != 'Cancelled' %}
+            <div class="card-footer bg-light p-4 border-0">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold text-primary small text-uppercase">General Dispensing Remarks</label>
+                        <textarea name="dispense_notes" class="form-control bg-white border-0 shadow-sm" rows="2" placeholder="Add any general notes for this dispensing session..."></textarea>
+                    </div>
+                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill px-4 shadow-sm w-100">
+                            <i class="bi bi-save2 me-2"></i>Save Dispensing Log
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+let aiLoaded = false;
+function loadAICounseling(uuid) {
+    if (aiLoaded) return;
+    
+    document.getElementById('aiLoadingIndicator').classList.remove('d-none');
+    
+    fetch(`/pharmacist/prescription/${uuid}/ai_explanation`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('aiLoadingIndicator').classList.add('d-none');
+            const contentDiv = document.getElementById('aiExplanationContent');
+            contentDiv.classList.remove('d-none');
+            
+            if (data.explanation) {
+                contentDiv.innerHTML = marked.parse(data.explanation);
+                aiLoaded = true;
+            } else {
+                contentDiv.innerHTML = '<span class="text-danger">Failed to load AI explanation.</span>';
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById('aiLoadingIndicator').classList.add('d-none');
+            document.getElementById('aiExplanationContent').classList.remove('d-none');
+            document.getElementById('aiExplanationContent').innerHTML = '<span class="text-danger">Error communicating with server.</span>';
+        });
+}
+</script>
+{% endblock %}

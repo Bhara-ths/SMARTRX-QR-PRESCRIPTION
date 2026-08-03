@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold text-dark mb-1"><i class="bi bi-gear-fill me-2"></i>System Settings</h2>
+                    <p class="text-muted mb-0">Configure hospital profile and platform preferences</p>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body p-4 p-md-5">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <h5 class="fw-bold text-primary mb-4 border-bottom pb-2">Hospital Information</h5>
+                        
+                        <div class="mb-4">
+                            {{ form.hospital_name.label(class="form-label fw-bold text-secondary") }}
+                            {{ form.hospital_name(class="form-control form-control-lg rounded-3 bg-light border-0", placeholder="Hospital Name") }}
+                            {% for error in form.hospital_name.errors %}
+                            <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-4">
+                            {{ form.hospital_address.label(class="form-label fw-bold text-secondary") }}
+                            {{ form.hospital_address(class="form-control rounded-3 bg-light border-0", rows="3", placeholder="Full Address") }}
+                            {% for error in form.hospital_address.errors %}
+                            <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="row mb-5">
+                            <div class="col-md-6">
+                                <div class="mb-4 mb-md-0">
+                                    {{ form.phone_number.label(class="form-label fw-bold text-secondary") }}
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0"><i class="bi bi-telephone text-muted"></i></span>
+                                        {{ form.phone_number(class="form-control rounded-end-3 bg-light border-0", placeholder="Phone Number") }}
+                                    </div>
+                                    {% for error in form.phone_number.errors %}
+                                    <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div>
+                                    {{ form.email.label(class="form-label fw-bold text-secondary") }}
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0"><i class="bi bi-envelope text-muted"></i></span>
+                                        {{ form.email(class="form-control rounded-end-3 bg-light border-0", placeholder="Contact Email") }}
+                                    </div>
+                                    {% for error in form.email.errors %}
+                                    <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <h5 class="fw-bold text-primary mb-4 border-bottom pb-2">Platform Preferences</h5>
+                        
+                        <div class="mb-5">
+                            {{ form.theme.label(class="form-label fw-bold text-secondary") }}
+                            {{ form.theme(class="form-select form-select-lg rounded-3 bg-light border-0") }}
+                            {% for error in form.theme.errors %}
+                            <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end pt-3 mt-4 border-top">
+                            <button type="reset" class="btn btn-light rounded-pill px-4 me-md-2 fw-bold">Discard Changes</button>
+                            {{ form.submit(class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow-sm") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

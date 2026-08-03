@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            {% if doctor.profile and doctor.profile.profile_photo %}
+            <img src="{{ url_for('static', filename='uploads/doctors/' + doctor.profile.profile_photo) }}" alt="Profile" class="rounded-circle me-3" style="width: 60px; height: 60px; object-fit: cover;">
+            {% else %}
+            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                <i class="bi bi-person text-secondary fs-3"></i>
+            </div>
+            {% endif %}
+            <div>
+                <h2 class="text-primary mb-0">Doctor Dashboard</h2>
+                <p class="text-muted mb-0">Welcome back, Dr. {{ doctor.full_name }} | <a href="{{ url_for('doctor.profile') }}" class="text-decoration-none">My Profile</a></p>
+            </div>
+        </div>
+        <div>
+            <a href="{{ url_for('doctor.appointments_list') }}" class="btn btn-outline-primary shadow-sm me-2">
+                <i class="bi bi-calendar-check"></i> Appointments
+            </a>
+            <a href="{{ url_for('public.scan_qr') }}" class="btn btn-warning shadow-sm text-dark me-2">
+                <i class="bi bi-qr-code-scan"></i> Scan QR
+            </a>
+            <a href="{{ url_for('doctor.patients_list') }}" class="btn btn-info shadow-sm text-white me-2">
+                <i class="bi bi-people"></i> Patients
+            </a>
+            <a href="{{ url_for('doctor.new_prescription') }}" class="btn btn-primary shadow-sm">
+                <i>+</i> New Prescription
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Quick Cards -->
+    <div class="col-md-3">
+        <div class="card bg-primary text-white shadow-sm h-100 border-0 rounded-4">
+            <div class="card-body">
+                <h6 class="text-uppercase text-white-50 fw-bold mb-2">Today's Total</h6>
+                <h2 class="mb-0 fw-bold">{{ todays_count }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white shadow-sm h-100 border-0 rounded-4">
+            <div class="card-body">
+                <h6 class="text-uppercase text-white-50 fw-bold mb-2">Completed</h6>
+                <h2 class="mb-0 fw-bold">{{ completed_count }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark shadow-sm h-100 border-0 rounded-4">
+            <div class="card-body">
+                <h6 class="text-uppercase text-dark-50 fw-bold mb-2">Pending</h6>
+                <h2 class="mb-0 fw-bold">{{ pending_count }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white shadow-sm h-100 border-0 rounded-4">
+            <div class="card-body">
+                <h6 class="text-uppercase text-white-50 fw-bold mb-2">Cancelled</h6>
+                <h2 class="mb-0 fw-bold">{{ cancelled_count }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Appointments Panel -->
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100 border-0 rounded-4">
+            <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 fw-bold text-primary"><i class="bi bi-calendar-event me-2"></i>Today's Appointments</h6>
+                <a href="{{ url_for('doctor.appointments_list') }}" class="btn btn-sm btn-outline-secondary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                {% if appointments %}
+                    <div class="list-group list-group-flush">
+                        {% for appt in appointments[:5] %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center p-3">
+                            <div>
+                                <strong class="text-dark">{{ appt.patient.full_name }}</strong><br>
+                                <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ appt.appointment_time.strftime('%I:%M %p') }} | {{ appt.appointment_type }}</small>
+                            </div>
+                            <span class="badge {% if appt.status == 'Scheduled' %}bg-warning text-dark{% elif appt.status == 'Completed' %}bg-success{% elif appt.status == 'Cancelled' %}bg-danger{% else %}bg-secondary{% endif %} rounded-pill px-3 py-2">{{ appt.status }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-calendar-x text-muted fs-1 d-block mb-3"></i>
+                        <p class="text-muted mb-0">No appointments scheduled for today.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Prescriptions -->
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Recent Prescriptions</h6>
+            </div>
+            <div class="card-body">
+                {% if prescriptions %}
+                    <ul class="list-group list-group-flush">
+                        {% for rx in prescriptions %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Patient ID: {{ rx.patient_id }}</strong><br>
+                                <small class="text-muted">{{ rx.created_at.strftime('%Y-%m-%d') }} - {{ rx.diagnosis }}</small>
+                            </div>
+                            <div>
+                                <a href="{{ url_for('doctor.view_prescription', uuid=rx.uuid) }}" class="btn btn-sm btn-outline-primary">View</a>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted text-center my-3">No recent prescriptions.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-2 mb-4">
+    <!-- Missed Medicine Reports -->
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100 border-0 rounded-4">
+            <div class="card-header bg-danger text-white py-3 border-0">
+                <h6 class="m-0 fw-bold"><i class="bi bi-exclamation-octagon me-2"></i>Missed Medicine Reports (Last 7 Days)</h6>
+            </div>
+            <div class="card-body p-0">
+                {% if missed_medicines %}
+                    <div class="list-group list-group-flush">
+                        {% for missed in missed_medicines %}
+                        <div class="list-group-item p-3">
+                            <div class="d-flex justify-content-between">
+                                <strong class="text-dark">{{ missed.patient.full_name }}</strong>
+                                <small class="text-danger fw-bold">Skipped</small>
+                            </div>
+                            <small class="text-muted">
+                                {{ missed.prescription_medicine.medicine.medicine_name }} - {{ missed.time_of_day }} on {{ missed.date.strftime('%b %d') }}
+                            </small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-check-circle text-success fs-2 d-block mb-2"></i>
+                        <p class="text-muted mb-0 small">No skipped medicines reported.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Patients Needing Refills -->
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100 border-0 rounded-4">
+            <div class="card-header bg-warning py-3 border-0">
+                <h6 class="m-0 fw-bold text-dark"><i class="bi bi-capsule me-2"></i>Upcoming Refills (Next 7 Days)</h6>
+            </div>
+            <div class="card-body p-0">
+                {% if pending_refills %}
+                    <div class="list-group list-group-flush">
+                        {% for refill in pending_refills %}
+                        <div class="list-group-item p-3">
+                            <div class="d-flex justify-content-between">
+                                <strong class="text-dark">{{ refill.patient.full_name }}</strong>
+                                <span class="badge bg-dark rounded-pill">{{ refill.estimated_refill_date.strftime('%b %d') }}</span>
+                            </div>
+                            <small class="text-muted">
+                                {{ refill.prescription_medicine.medicine.medicine_name }}
+                            </small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-shield-check text-muted fs-2 d-block mb-2 opacity-50"></i>
+                        <p class="text-muted mb-0 small">No immediate refills needed.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

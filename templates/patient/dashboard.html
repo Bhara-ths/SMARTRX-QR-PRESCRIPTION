@@ -1,0 +1,383 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Welcome Header -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h2 class="fw-bold text-primary mb-1">Welcome back, {{ patient.full_name }}!</h2>
+            <p class="text-muted mb-0">Here is an overview of your health records and prescriptions.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <a href="{{ url_for('patient.profile') }}" class="btn btn-primary rounded-pill px-4 shadow-sm fw-medium">
+                <i class="bi bi-person-circle me-2"></i>My Profile
+            </a>
+        </div>
+    </div>
+
+    <!-- Metrics Row -->
+    <div class="row g-4 mb-5">
+        <div class="col-xl-3 col-sm-6">
+            <div class="card shadow-sm border-0 rounded-4 h-100 bg-white hover-shadow transition">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                            <i class="bi bi-file-medical fs-4"></i>
+                        </div>
+                        <span class="badge bg-light text-muted border rounded-pill">Total</span>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-1">{{ total_rx }}</h3>
+                    <p class="text-muted small mb-0 fw-medium">Total Prescriptions</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-sm-6">
+            <div class="card shadow-sm border-0 rounded-4 h-100 bg-white hover-shadow transition">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                            <i class="bi bi-capsule-pill fs-4"></i>
+                        </div>
+                        <span class="badge bg-light text-muted border rounded-pill">Current</span>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-1">{{ active_rx }}</h3>
+                    <p class="text-muted small mb-0 fw-medium">Active Prescriptions</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-sm-6">
+            <div class="card shadow-sm border-0 rounded-4 h-100 bg-white hover-shadow transition">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                            <i class="bi bi-check2-all fs-4"></i>
+                        </div>
+                        <span class="badge bg-light text-muted border rounded-pill">History</span>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-1">{{ completed_rx }}</h3>
+                    <p class="text-muted small mb-0 fw-medium">Completed Prescriptions</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-sm-6">
+            <div class="card shadow-sm border-0 rounded-4 h-100 bg-white hover-shadow transition">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                            <i class="bi bi-calendar-event fs-4"></i>
+                        </div>
+                        <span class="badge bg-light text-muted border rounded-pill">Upcoming</span>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-1">{{ upcoming_appointments }}</h3>
+                    <p class="text-muted small mb-0 fw-medium">Upcoming Appointments</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <h5 class="fw-bold text-dark mb-3">Quick Actions</h5>
+    <div class="row g-3 mb-5">
+        <div class="col-md-3 col-sm-6">
+            <a href="{{ url_for('patient.prescriptions') }}" class="btn btn-light w-100 p-3 text-start border shadow-sm rounded-4 hover-primary transition">
+                <i class="bi bi-journal-medical text-primary fs-3 d-block mb-2"></i>
+                <h6 class="fw-bold mb-0">My Prescriptions</h6>
+            </a>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <a href="{{ url_for('public.scan_qr') }}" class="btn btn-light w-100 p-3 text-start border shadow-sm rounded-4 hover-primary transition">
+                <i class="bi bi-qr-code-scan text-primary fs-3 d-block mb-2"></i>
+                <h6 class="fw-bold mb-0">Scan QR Code</h6>
+            </a>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <a href="{{ url_for('patient.schedule') }}" class="btn btn-light w-100 p-3 text-start border shadow-sm rounded-4 hover-primary transition">
+                <i class="bi bi-clock-history text-primary fs-3 d-block mb-2"></i>
+                <h6 class="fw-bold mb-0">Medicine Schedule</h6>
+            </a>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <a href="{{ url_for('patient.history') }}" class="btn btn-light w-100 p-3 text-start border shadow-sm rounded-4 hover-primary transition">
+                <i class="bi bi-archive text-primary fs-3 d-block mb-2"></i>
+                <h6 class="fw-bold mb-0">Prescription History</h6>
+            </a>
+        </div>
+    </div>
+
+    <!-- Medicine Reminders -->
+    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-clock-history text-primary me-2"></i>Today's Medicine Reminders</h5>
+    <div class="row g-4 mb-5">
+        {% for time, reminders in reminders_grouped.items() %}
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-header bg-light border-bottom-0 py-3 text-center">
+                    <h6 class="mb-0 fw-bold">
+                        {% if time == 'Morning' %}<i class="bi bi-sunrise text-warning me-2"></i>Morning
+                        {% elif time == 'Afternoon' %}<i class="bi bi-sun text-warning me-2"></i>Afternoon
+                        {% elif time == 'Evening' %}<i class="bi bi-sunset text-danger me-2"></i>Evening
+                        {% else %}<i class="bi bi-moon-stars text-primary me-2"></i>Night{% endif %}
+                    </h6>
+                </div>
+                <div class="card-body p-3">
+                    {% if reminders %}
+                        {% for reminder in reminders %}
+                        <div class="mb-3 border-bottom pb-2 last-border-none">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <span class="fw-bold text-dark small">{{ reminder.prescription_medicine.medicine.medicine_name }}</span>
+                                {% if reminder.status == 'Pending' %}
+                                    <span class="badge bg-warning text-dark" id="status-badge-{{ reminder.id }}">Pending</span>
+                                {% elif reminder.status == 'Taken' %}
+                                    <span class="badge bg-success" id="status-badge-{{ reminder.id }}">Taken</span>
+                                {% else %}
+                                    <span class="badge bg-danger" id="status-badge-{{ reminder.id }}">Skipped</span>
+                                {% endif %}
+                            </div>
+                            <div class="small text-muted mb-2">
+                                {{ reminder.prescription_medicine.dosage }} ({{ reminder.prescription_medicine.food_relation }})
+                            </div>
+                            {% if reminder.status == 'Pending' %}
+                            <div class="d-flex gap-2" id="action-btns-{{ reminder.id }}">
+                                <button class="btn btn-sm btn-outline-success rounded-pill flex-fill reminder-btn" data-id="{{ reminder.id }}" data-status="Taken"><i class="bi bi-check2"></i> Taken</button>
+                                <button class="btn btn-sm btn-outline-danger rounded-pill flex-fill reminder-btn" data-id="{{ reminder.id }}" data-status="Skipped"><i class="bi bi-x"></i> Skip</button>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-check-circle fs-3 d-block mb-2 text-success opacity-50"></i>
+                            <small>No medicines</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Refill Reminders -->
+    {% if upcoming_refills %}
+    <div class="alert alert-warning border-0 shadow-sm rounded-4 mb-5 d-flex align-items-center">
+        <i class="bi bi-exclamation-triangle-fill fs-3 text-warning me-3"></i>
+        <div>
+            <h6 class="fw-bold mb-1">Prescription Refills Needed Soon</h6>
+            <p class="mb-0 small">
+                {% for refill in upcoming_refills %}
+                    {{ refill.prescription_medicine.medicine.medicine_name }} (Refill by {{ refill.estimated_refill_date.strftime('%b %d') }}){% if not loop.last %}, {% endif %}
+                {% endfor %}
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row g-4">
+        <!-- Recent Prescriptions -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden h-100">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold text-primary mb-0"><i class="bi bi-clock me-2"></i>Recent Prescriptions</h5>
+                    <a href="{{ url_for('patient.prescriptions') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">View All</a>
+                </div>
+                <div class="card-body p-0 mt-2">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light text-muted text-uppercase" style="font-size: 0.85rem;">
+                                <tr>
+                                    <th class="ps-4 py-3">Date</th>
+                                    <th>Doctor</th>
+                                    <th>Diagnosis</th>
+                                    <th>Status</th>
+                                    <th class="pe-4 text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for rx in recent_rx %}
+                                <tr>
+                                    <td class="ps-4 py-3">
+                                        <div class="fw-medium text-dark">{{ rx.created_at.strftime('%b %d, %Y') }}</div>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold text-dark">Dr. {{ rx.doctor.full_name }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-muted">{{ rx.diagnosis or 'N/A' }}</span>
+                                    </td>
+                                    <td>
+                                        {% if rx.status == 'Active' %}
+                                            <span class="badge bg-success rounded-pill px-3">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary rounded-pill px-3">{{ rx.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="pe-4 text-end">
+                                        <a href="{{ url_for('patient.prescription_view', uuid=rx.uuid) }}" class="btn btn-sm btn-primary rounded-pill px-3 fw-medium shadow-sm">View</a>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-5">
+                                        <div class="text-muted">
+                                            <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+                                            <h6 class="fw-medium">No Prescriptions Yet</h6>
+                                            <p class="small">Your doctors haven't issued any prescriptions.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Next Appointments & AI Sidebar -->
+        <div class="col-lg-4">
+            <!-- Next Appointment -->
+            <div class="card shadow-sm border-0 rounded-4 mb-4">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold text-primary mb-0"><i class="bi bi-calendar-check me-2"></i>Next Appointment</h5>
+                    <a href="{{ url_for('patient.appointments') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">View All</a>
+                </div>
+                <div class="card-body p-4 text-center">
+                    {% if next_appointment %}
+                        <div class="bg-light rounded-4 p-4 mb-3">
+                            <h4 class="fw-bold text-dark mb-1">Dr. {{ next_appointment.doctor.full_name }}</h4>
+                            <p class="text-muted mb-2">{{ next_appointment.department or next_appointment.doctor.specialization }}</p>
+                            
+                            <div class="d-flex justify-content-center align-items-center gap-2 mb-3">
+                                <span class="badge bg-primary fs-6 py-2 px-3"><i class="bi bi-calendar me-2"></i>{{ next_appointment.appointment_date.strftime('%B %d, %Y') }}</span>
+                                <span class="badge bg-info text-dark fs-6 py-2 px-3"><i class="bi bi-clock me-2"></i>{{ next_appointment.appointment_time.strftime('%I:%M %p') }}</span>
+                            </div>
+                            
+                            <div class="countdown-timer mt-3" data-date="{{ next_appointment.appointment_date.strftime('%Y-%m-%d') }}T{{ next_appointment.appointment_time.strftime('%H:%M:%S') }}">
+                                <h6 class="text-uppercase text-muted fw-bold small mb-2">Time Until Appointment</h6>
+                                <div class="d-flex justify-content-center gap-3">
+                                    <div class="text-center">
+                                        <h3 class="fw-bold text-primary mb-0" id="cd-days">--</h3>
+                                        <small class="text-muted">Days</small>
+                                    </div>
+                                    <div class="text-center">
+                                        <h3 class="fw-bold text-primary mb-0" id="cd-hours">--</h3>
+                                        <small class="text-muted">Hours</small>
+                                    </div>
+                                    <div class="text-center">
+                                        <h3 class="fw-bold text-primary mb-0" id="cd-mins">--</h3>
+                                        <small class="text-muted">Mins</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('patient.appointments') }}" class="btn btn-outline-danger btn-sm w-100 rounded-pill">Manage Appointment</a>
+                        
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                const cdElement = document.querySelector('.countdown-timer');
+                                if (!cdElement) return;
+                                
+                                const targetDate = new Date(cdElement.getAttribute('data-date')).getTime();
+                                
+                                const interval = setInterval(function() {
+                                    const now = new Date().getTime();
+                                    const distance = targetDate - now;
+                                    
+                                    if (distance < 0) {
+                                        clearInterval(interval);
+                                        document.getElementById("cd-days").innerText = "0";
+                                        document.getElementById("cd-hours").innerText = "0";
+                                        document.getElementById("cd-mins").innerText = "0";
+                                        return;
+                                    }
+                                    
+                                    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                                    
+                                    document.getElementById("cd-days").innerText = days;
+                                    document.getElementById("cd-hours").innerText = hours;
+                                    document.getElementById("cd-mins").innerText = minutes;
+                                }, 1000);
+                            });
+                        </script>
+                    {% else %}
+                        <div class="py-4">
+                            <i class="bi bi-calendar-x fs-1 text-muted d-block mb-3"></i>
+                            <h6 class="fw-medium text-dark">No Upcoming Appointments</h6>
+                            <p class="small text-muted mb-4">You have no appointments scheduled.</p>
+                            <a href="{{ url_for('patient.request_appointment') }}" class="btn btn-primary rounded-pill px-4"><i class="bi bi-calendar-plus me-2"></i>Book Now</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- SmartRx AI -->
+            <div class="card shadow-sm border-0 rounded-4 bg-primary text-white">
+                <div class="card-body p-4 text-center">
+                    <div class="bg-white text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <i class="bi bi-robot fs-2"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">SmartRx AI Assistant</h5>
+                    <p class="small text-white-50 mb-4">Have questions about your medicines or dosage instructions? Ask our intelligent assistant.</p>
+                    <a href="{{ url_for('patient.ai_assistant') }}" class="btn btn-light text-primary fw-bold rounded-pill w-100 shadow-sm">Chat Now</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-shadow:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        transform: translateY(-3px);
+    }
+    .hover-primary:hover {
+        border-color: var(--bs-primary) !important;
+        background-color: rgba(13, 110, 253, 0.03) !important;
+        color: var(--bs-primary) !important;
+    }
+    .hover-primary h6 {
+        color: var(--bs-primary) !important;
+    }
+    .transition {
+        transition: all 0.3s ease-in-out;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.reminder-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const reminderId = this.getAttribute('data-id');
+            const status = this.getAttribute('data-status');
+            
+            fetch(`/patient/reminders/toggle/${reminderId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() if csrf_token else "" }}'
+                },
+                body: JSON.stringify({ status: status })
+            }).then(response => response.json())
+              .then(data => {
+                  if(data.success) {
+                      // Update UI
+                      const badge = document.getElementById(`status-badge-${reminderId}`);
+                      badge.innerText = status;
+                      if(status === 'Taken') {
+                          badge.className = 'badge bg-success';
+                      } else {
+                          badge.className = 'badge bg-danger';
+                      }
+                      
+                      // Hide buttons
+                      document.getElementById(`action-btns-${reminderId}`).style.display = 'none';
+                  }
+              });
+        });
+    });
+});
+</script>
+{% endblock %}

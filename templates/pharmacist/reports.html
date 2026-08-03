@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h2 class="fw-bold text-primary mb-1"><i class="bi bi-graph-up me-2"></i>Reports & Analytics</h2>
+            <p class="text-muted mb-0">Export dispensing data and analyze usage for auditing.</p>
+        </div>
+        <div class="col-md-6 text-md-end mt-3 mt-md-0">
+            <a href="{{ url_for('pharmacist.dashboard') }}" class="btn btn-outline-secondary px-4 rounded-pill shadow-sm">
+                <i class="bi bi-arrow-left me-1"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Export Cards -->
+    <div class="row g-4">
+        <!-- Today's Report -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-4 h-100 hover-shadow transition">
+                <div class="card-body text-center p-5">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px;">
+                        <i class="bi bi-calendar-day fs-1"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark">Today's Report</h4>
+                    <p class="text-muted small mb-4">Export all dispensing activities recorded during today's shift.</p>
+                    
+                    <div class="d-flex justify-content-center gap-2">
+                        <a href="{{ url_for('pharmacist.export_report', type='today', format='csv') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-medium">
+                            <i class="bi bi-filetype-csv me-1"></i> CSV
+                        </a>
+                        <a href="{{ url_for('pharmacist.export_report', type='today', format='excel') }}" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-medium">
+                            <i class="bi bi-file-earmark-excel me-1"></i> Excel
+                        </a>
+                        <a href="{{ url_for('pharmacist.export_report', type='today', format='pdf') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-medium">
+                            <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Weekly Report -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-4 h-100 hover-shadow transition">
+                <div class="card-body text-center p-5">
+                    <div class="bg-success bg-opacity-10 text-success rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px;">
+                        <i class="bi bi-calendar-week fs-1"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark">Weekly Report</h4>
+                    <p class="text-muted small mb-4">Export all dispensing activities from the last 7 days.</p>
+                    
+                    <div class="d-flex justify-content-center gap-2">
+                        <a href="{{ url_for('pharmacist.export_report', type='weekly', format='csv') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-medium">
+                            <i class="bi bi-filetype-csv me-1"></i> CSV
+                        </a>
+                        <a href="{{ url_for('pharmacist.export_report', type='weekly', format='excel') }}" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-medium">
+                            <i class="bi bi-file-earmark-excel me-1"></i> Excel
+                        </a>
+                        <a href="{{ url_for('pharmacist.export_report', type='weekly', format='pdf') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-medium">
+                            <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Monthly Report -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-4 h-100 hover-shadow transition">
+                <div class="card-body text-center p-5">
+                    <div class="bg-info bg-opacity-10 text-info rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px;">
+                        <i class="bi bi-calendar-month fs-1"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark">Monthly Report</h4>
+                    <p class="text-muted small mb-4">Export all dispensing activities from the last 30 days.</p>
+                    
+                    <div class="d-flex justify-content-center gap-2">
+                        <a href="{{ url_for('pharmacist.export_report', type='monthly', format='csv') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-medium">
+                            <i class="bi bi-filetype-csv me-1"></i> CSV
+                        </a>
+                        <a href="{{ url_for('pharmacist.export_report', type='monthly', format='excel') }}" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-medium">
+                            <i class="bi bi-file-earmark-excel me-1"></i> Excel
+                        </a>
+                        <a href="{{ url_for('pharmacist.export_report', type='monthly', format='pdf') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-medium">
+                            <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-shadow:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        transform: translateY(-5px);
+    }
+    .transition {
+        transition: all 0.3s ease-in-out;
+    }
+</style>
+{% endblock %}

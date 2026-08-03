@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-primary"><i class="bi bi-person-badge"></i> My Profile</h2>
+            <a href="{{ url_for('doctor.edit_profile') }}" class="btn btn-primary"><i class="bi bi-pencil"></i> Edit Profile</a>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4">
+                <div class="row">
+                    <div class="col-md-3 text-center border-end">
+                        {% if doctor.profile and doctor.profile.profile_photo %}
+                        <img src="{{ url_for('static', filename='uploads/doctors/' + doctor.profile.profile_photo) }}" alt="Profile Photo" class="img-fluid rounded-circle mb-3 shadow-sm" style="width: 150px; height: 150px; object-fit: cover;">
+                        {% else %}
+                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3 shadow-sm" style="width: 150px; height: 150px;">
+                            <i class="bi bi-person text-secondary" style="font-size: 4rem;"></i>
+                        </div>
+                        {% endif %}
+                        <h4 class="fw-bold">Dr. {{ doctor.full_name }}</h4>
+                        <p class="text-muted mb-1">{{ doctor.specialization or 'Specialization Not Set' }}</p>
+                        <span class="badge bg-primary px-3 rounded-pill">Reg: {{ doctor.registration_number }}</span>
+                    </div>
+                    
+                    <div class="col-md-9 ps-md-4">
+                        <h5 class="text-secondary border-bottom pb-2 mb-3">Professional Details</h5>
+                        <div class="row mb-4">
+                            <div class="col-sm-6">
+                                <p class="mb-1 text-muted small">Qualification</p>
+                                <p class="fw-bold">{{ doctor.profile.qualification if doctor.profile else 'Not Set' }}</p>
+                            </div>
+                            <div class="col-sm-6">
+                                <p class="mb-1 text-muted small">Experience</p>
+                                <p class="fw-bold">{{ doctor.profile.years_of_experience ~ ' Years' if doctor.profile and doctor.profile.years_of_experience else 'Not Set' }}</p>
+                            </div>
+                            <div class="col-sm-6">
+                                <p class="mb-1 text-muted small">Department</p>
+                                <p class="fw-bold">{{ doctor.department or 'Not Set' }}</p>
+                            </div>
+                            <div class="col-sm-6">
+                                <p class="mb-1 text-muted small">Hospital / Clinic</p>
+                                <p class="fw-bold">{{ doctor.hospital or 'Not Set' }}</p>
+                            </div>
+                        </div>
+
+                        <h5 class="text-secondary border-bottom pb-2 mb-3">Contact Information</h5>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <p class="mb-1 text-muted small">Phone Number</p>
+                                <p class="fw-bold"><i class="bi bi-telephone"></i> {{ doctor.phone or 'Not Set' }}</p>
+                            </div>
+                            <div class="col-sm-6">
+                                <p class="mb-1 text-muted small">Email</p>
+                                <p class="fw-bold"><i class="bi bi-envelope"></i> {{ current_user.email }}</p>
+                            </div>
+                            <div class="col-12">
+                                <p class="mb-1 text-muted small">Address</p>
+                                <p class="fw-bold"><i class="bi bi-geo-alt"></i> {{ doctor.profile.address if doctor.profile else 'Not Set' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Biography</h6>
+                    </div>
+                    <div class="card-body">
+                        {% if doctor.profile and doctor.profile.biography %}
+                        <p class="mb-0" style="white-space: pre-line;">{{ doctor.profile.biography }}</p>
+                        {% else %}
+                        <p class="text-muted fst-italic mb-0">No biography provided.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Digital Signature</h6>
+                    </div>
+                    <div class="card-body text-center d-flex flex-column justify-content-center">
+                        {% if doctor.profile and doctor.profile.digital_signature %}
+                        <img src="{{ url_for('static', filename='uploads/doctors/' + doctor.profile.digital_signature) }}" alt="Digital Signature" class="img-fluid border rounded bg-light" style="max-height: 120px;">
+                        <p class="text-success small mt-2"><i class="bi bi-check-circle"></i> Signature Uploaded</p>
+                        {% else %}
+                        <div class="border rounded bg-light p-4 text-muted">
+                            <i class="bi bi-pen fs-1"></i>
+                            <p class="mt-2 mb-0 small">No signature uploaded</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+{% endblock %}

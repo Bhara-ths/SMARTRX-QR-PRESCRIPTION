@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-primary fw-bold mb-0">
+                <i class="bi bi-calendar-plus me-2"></i>{{ action }} Appointment
+            </h2>
+            <a href="{{ url_for('doctor.appointments_list') }}" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="bi bi-arrow-left me-2"></i>Back to List
+            </a>
+        </div>
+
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-body p-5">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark">Patient Search</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" id="patientSearch" class="form-control border-start-0 bg-light" placeholder="Search by name, ID or phone..." autocomplete="off" value="{{ patient_name if patient_name else '' }}">
+                        </div>
+                        <!-- Hidden field for actual patient_id -->
+                        {{ form.patient_id(id="patient_id") }}
+                        <div id="searchResults" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1000; display: none;"></div>
+                        {% if form.patient_id.errors %}
+                            <div class="text-danger small mt-1">{{ form.patient_id.errors[0] }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark">Appointment Date</label>
+                            {{ form.appointment_date(class="form-control" + (" is-invalid" if form.appointment_date.errors else "")) }}
+                            {% if form.appointment_date.errors %}<div class="invalid-feedback">{{ form.appointment_date.errors[0] }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark">Appointment Time</label>
+                            {{ form.appointment_time(class="form-control" + (" is-invalid" if form.appointment_time.errors else "")) }}
+                            {% if form.appointment_time.errors %}<div class="invalid-feedback">{{ form.appointment_time.errors[0] }}</div>{% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark">Department</label>
+                            {{ form.department(class="form-control" + (" is-invalid" if form.department.errors else "")) }}
+                            {% if form.department.errors %}<div class="invalid-feedback">{{ form.department.errors[0] }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark">Appointment Type</label>
+                            {{ form.appointment_type(class="form-select" + (" is-invalid" if form.appointment_type.errors else "")) }}
+                            {% if form.appointment_type.errors %}<div class="invalid-feedback">{{ form.appointment_type.errors[0] }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark">Reason For Visit</label>
+                        {{ form.reason_for_visit(class="form-control" + (" is-invalid" if form.reason_for_visit.errors else "")) }}
+                        {% if form.reason_for_visit.errors %}<div class="invalid-feedback">{{ form.reason_for_visit.errors[0] }}</div>{% endif %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark">Status</label>
+                        {{ form.status(class="form-select" + (" is-invalid" if form.status.errors else "")) }}
+                        {% if form.status.errors %}<div class="invalid-feedback">{{ form.status.errors[0] }}</div>{% endif %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark">Clinical Notes (Optional)</label>
+                        {{ form.notes(class="form-control" + (" is-invalid" if form.notes.errors else ""), rows="3") }}
+                        {% if form.notes.errors %}<div class="invalid-feedback">{{ form.notes.errors[0] }}</div>{% endif %}
+                    </div>
+
+                    <div class="d-grid mt-5">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill shadow-sm">
+                            <i class="bi bi-save me-2"></i>Save Appointment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('patientSearch');
+    const resultsDiv = document.getElementById('searchResults');
+    const patientIdInput = document.getElementById('patient_id');
+    
+    // Set initial ID if editing but ensure readonly search input if we want to lock it
+    if (patientIdInput.value && patientIdInput.value !== 'None') {
+        // If editing, we prefilled patient_name, maybe we shouldn't allow changing patient easily?
+        // Let's just allow search.
+    } else {
+        patientIdInput.type = 'hidden';
+    }
+
+    searchInput.addEventListener('input', function() {
+        if (this.value.length < 2) {
+            resultsDiv.style.display = 'none';
+            return;
+        }
+        
+        fetch(`/doctor/api/patients/search?q=${this.value}`)
+            .then(res => res.json())
+            .then(data => {
+                resultsDiv.innerHTML = '';
+                if (data.length > 0) {
+                    data.forEach(patient => {
+                        const a = document.createElement('a');
+                        a.href = '#';
+                        a.className = 'list-group-item list-group-item-action py-3';
+                        a.innerHTML = `
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1 text-primary fw-bold">${patient.name}</h6>
+                                <small class="text-muted">ID: ${patient.uid}</small>
+                            </div>
+                            <p class="mb-1 small text-muted"><i class="bi bi-telephone me-1"></i>${patient.phone}</p>
+                        `;
+                        a.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            searchInput.value = patient.name;
+                            patientIdInput.value = patient.id;
+                            resultsDiv.style.display = 'none';
+                            searchInput.classList.add('is-valid');
+                        });
+                        resultsDiv.appendChild(a);
+                    });
+                    resultsDiv.style.display = 'block';
+                } else {
+                    resultsDiv.innerHTML = '<div class="list-group-item text-muted text-center py-3">No patients found.</div>';
+                    resultsDiv.style.display = 'block';
+                }
+            });
+    });
+
+    // Hide results when clicking outside
+    document.addEventListener('click', function(e) {
+        if (e.target !== searchInput && e.target !== resultsDiv) {
+            resultsDiv.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}

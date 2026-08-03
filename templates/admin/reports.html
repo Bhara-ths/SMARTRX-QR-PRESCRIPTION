@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header & Export -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <div>
+            <h2 class="fw-bold text-primary mb-1"><i class="bi bi-bar-chart-line me-2"></i>Reports & Analytics</h2>
+            <p class="text-muted mb-0">Comprehensive hospital performance metrics.</p>
+        </div>
+        <div class="mt-3 mt-md-0 d-flex gap-2">
+            <a href="{{ url_for('admin.reports_export', format='pdf') }}" class="btn btn-danger rounded-pill px-4 shadow-sm">
+                <i class="bi bi-file-earmark-pdf me-2"></i>Export PDF
+            </a>
+            <a href="{{ url_for('admin.reports_export', format='excel') }}" class="btn btn-success rounded-pill px-4 shadow-sm">
+                <i class="bi bi-file-earmark-excel me-2"></i>Export Excel
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters Sidebar & Main Content -->
+    <div class="row g-4">
+        <!-- Filters (Left Sidebar) -->
+        <div class="col-lg-3">
+            <div class="card shadow-sm border-0 rounded-4 sticky-top" style="top: 20px;">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4">
+                    <h5 class="fw-bold text-dark mb-0"><i class="bi bi-funnel me-2"></i>Filters</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form action="{{ url_for('admin.reports') }}" method="GET">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Start Date</label>
+                            <input type="date" class="form-control rounded-3" name="start_date" value="{{ start_date.strftime('%Y-%m-%d') if start_date else '' }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold text-uppercase">End Date</label>
+                            <input type="date" class="form-control rounded-3" name="end_date" value="{{ end_date.strftime('%Y-%m-%d') if end_date else '' }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Doctor</label>
+                            <select class="form-select rounded-3" name="doctor_id">
+                                <option value="">All Doctors</option>
+                                {% for d in doctors %}
+                                <option value="{{ d.doctor_id }}" {% if doctor_id == d.doctor_id %}selected{% endif %}>Dr. {{ d.full_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Pharmacist</label>
+                            <select class="form-select rounded-3" name="pharmacist_id">
+                                <option value="">All Pharmacists</option>
+                                {% for p in pharmacists %}
+                                <option value="{{ p.pharmacist_id }}" {% if pharmacist_id == p.pharmacist_id %}selected{% endif %}>{{ p.full_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary rounded-pill shadow-sm">Apply Filters</button>
+                            <a href="{{ url_for('admin.reports') }}" class="btn btn-light rounded-pill mt-2">Reset</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports Tabs & Data -->
+        <div class="col-lg-9">
+            <!-- Nav Tabs -->
+            <ul class="nav nav-pills mb-4 gap-2" id="reportTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active rounded-pill px-4 shadow-sm" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab"><i class="bi bi-grid me-2"></i>Overview</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill px-4 shadow-sm" data-bs-toggle="tab" data-bs-target="#doctor" type="button" role="tab"><i class="bi bi-heart-pulse me-2"></i>Doctor</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill px-4 shadow-sm" data-bs-toggle="tab" data-bs-target="#patient" type="button" role="tab"><i class="bi bi-people me-2"></i>Patient</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill px-4 shadow-sm" data-bs-toggle="tab" data-bs-target="#pharmacy" type="button" role="tab"><i class="bi bi-capsule me-2"></i>Pharmacy</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill px-4 shadow-sm" data-bs-toggle="tab" data-bs-target="#qr" type="button" role="tab"><i class="bi bi-qr-code me-2"></i>QR Usage</button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="reportTabsContent">
+                
+                <!-- Overview Tab -->
+                <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <div class="card shadow-sm border-0 rounded-4 p-4 h-100">
+                                <h6 class="fw-bold mb-4">Prescriptions & Appointments Trend</h6>
+                                <canvas id="trendChart" height="200"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card shadow-sm border-0 rounded-4 p-4 h-100">
+                                <h6 class="fw-bold mb-4">Patient Demographics (Gender)</h6>
+                                <canvas id="genderChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Doctor Tab -->
+                <div class="tab-pane fade" id="doctor" role="tabpanel">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="card shadow-sm border-0 rounded-4 bg-primary text-white h-100 text-center p-4">
+                                <h6 class="text-uppercase fw-bold opacity-75">Total Patients Seen</h6>
+                                <h2 class="fw-bold mb-0 mt-2">{{ doc_stats.total_patients }}</h2>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card shadow-sm border-0 rounded-4 bg-info text-white h-100 text-center p-4">
+                                <h6 class="text-uppercase fw-bold opacity-75">Total Prescriptions</h6>
+                                <h2 class="fw-bold mb-0 mt-2">{{ doc_stats.total_rx }}</h2>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card shadow-sm border-0 rounded-4 bg-success text-white h-100 text-center p-4">
+                                <h6 class="text-uppercase fw-bold opacity-75">Follow-up Appointments</h6>
+                                <h2 class="fw-bold mb-0 mt-2">{{ doc_stats.follow_ups }}</h2>
+                            </div>
+                        </div>
+                        <div class="col-12 mt-4">
+                            <div class="card shadow-sm border-0 rounded-4 p-4">
+                                <h6 class="fw-bold mb-4">Prescription Velocity</h6>
+                                <div class="row text-center">
+                                    <div class="col-4 border-end">
+                                        <h3 class="text-primary fw-bold">{{ doc_stats.today_rx }}</h3>
+                                        <span class="text-muted small text-uppercase fw-bold">Today</span>
+                                    </div>
+                                    <div class="col-4 border-end">
+                                        <h3 class="text-primary fw-bold">{{ doc_stats.weekly_rx }}</h3>
+                                        <span class="text-muted small text-uppercase fw-bold">This Week</span>
+                                    </div>
+                                    <div class="col-4">
+                                        <h3 class="text-primary fw-bold">{{ doc_stats.monthly_rx }}</h3>
+                                        <span class="text-muted small text-uppercase fw-bold">This Month</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Patient Tab -->
+                <div class="tab-pane fade" id="patient" role="tabpanel">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="card shadow-sm border-0 rounded-4 h-100 p-4">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <h6 class="fw-bold mb-0">Total Registered Patients</h6>
+                                    <h3 class="text-primary fw-bold mb-0">{{ pat_stats.total_registered }}</h3>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="fw-bold text-muted mb-0">New This Month</h6>
+                                    <h4 class="text-success fw-bold mb-0">+{{ pat_stats.new_this_month }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card shadow-sm border-0 rounded-4 h-100 p-4">
+                                <h6 class="fw-bold mb-4">Age Distribution</h6>
+                                <canvas id="ageChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pharmacy Tab -->
+                <div class="tab-pane fade" id="pharmacy" role="tabpanel">
+                    <div class="row g-4">
+                        <div class="col-md-3">
+                            <div class="card shadow-sm border-0 rounded-4 bg-info text-white text-center p-3 h-100">
+                                <h6 class="text-uppercase opacity-75 small fw-bold">Meds Dispensed Today</h6>
+                                <h3 class="fw-bold mb-0 mt-2">{{ pharm_stats.dispensed_today }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card shadow-sm border-0 rounded-4 bg-warning text-dark text-center p-3 h-100">
+                                <h6 class="text-uppercase opacity-75 small fw-bold">Pending Prescriptions</h6>
+                                <h3 class="fw-bold mb-0 mt-2">{{ pharm_stats.pending }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card shadow-sm border-0 rounded-4 bg-secondary text-white text-center p-3 h-100">
+                                <h6 class="text-uppercase opacity-75 small fw-bold">Partial Dispensing</h6>
+                                <h3 class="fw-bold mb-0 mt-2">{{ pharm_stats.partial }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card shadow-sm border-0 rounded-4 bg-success text-white text-center p-3 h-100">
+                                <h6 class="text-uppercase opacity-75 small fw-bold">Completed Prescriptions</h6>
+                                <h3 class="fw-bold mb-0 mt-2">{{ pharm_stats.completed }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-12 mt-4">
+                            <div class="card shadow-sm border-0 rounded-4">
+                                <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4">
+                                    <h6 class="fw-bold text-dark mb-0">Most Dispensed Medicines</h6>
+                                </div>
+                                <div class="card-body p-0">
+                                    <table class="table table-hover mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th class="ps-4">Medicine Name</th>
+                                                <th class="pe-4 text-end">Total Dispensed</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for med in pharm_stats.most_dispensed %}
+                                            <tr>
+                                                <td class="ps-4 fw-medium">{{ med.medicine_name }}</td>
+                                                <td class="pe-4 text-end fw-bold text-primary">{{ med.total }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- QR Tab -->
+                <div class="tab-pane fade" id="qr" role="tabpanel">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="card shadow-sm border-0 rounded-4 text-center p-4 h-100 border-top border-primary border-4">
+                                <i class="bi bi-qr-code fs-1 text-primary mb-3"></i>
+                                <h6 class="text-uppercase text-muted fw-bold">QR Generated</h6>
+                                <h2 class="fw-bold text-dark mb-0">{{ qr_stats.generated }}</h2>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card shadow-sm border-0 rounded-4 text-center p-4 h-100 border-top border-success border-4">
+                                <i class="bi bi-upc-scan fs-1 text-success mb-3"></i>
+                                <h6 class="text-uppercase text-muted fw-bold">QR Scanned</h6>
+                                <h2 class="fw-bold text-dark mb-0">{{ qr_stats.scanned }}</h2>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card shadow-sm border-0 rounded-4 text-center p-4 h-100 border-top border-danger border-4">
+                                <i class="bi bi-exclamation-triangle fs-1 text-danger mb-3"></i>
+                                <h6 class="text-uppercase text-muted fw-bold">Invalid Attempts</h6>
+                                <h2 class="fw-bold text-dark mb-0">{{ qr_stats.invalid }}</h2>
+                            </div>
+                        </div>
+                        <div class="col-12 mt-4">
+                            <div class="card shadow-sm border-0 rounded-4 p-4">
+                                <h6 class="fw-bold mb-4">QR Usage Comparison</h6>
+                                <canvas id="qrChart" height="100"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Trend Chart (Prescriptions vs Appointments from /analytics/data)
+    fetch("{{ url_for('admin.analytics_data') }}")
+        .then(res => res.json())
+        .then(data => {
+            new Chart(document.getElementById('trendChart'), {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        {
+                            label: 'Prescriptions',
+                            data: data.prescriptions,
+                            borderColor: '#0d6efd',
+                            backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Appointments',
+                            data: data.appointments,
+                            borderColor: '#198754',
+                            backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        });
+
+    // 2. Gender Doughnut Chart
+    new Chart(document.getElementById('genderChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Male', 'Female', 'Other'],
+            datasets: [{
+                data: [{{ pat_stats.gender.Male }}, {{ pat_stats.gender.Female }}, {{ pat_stats.gender.Other }}],
+                backgroundColor: ['#0d6efd', '#d63384', '#6c757d'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } },
+            cutout: '70%'
+        }
+    });
+
+    // 3. Age Bar Chart
+    new Chart(document.getElementById('ageChart'), {
+        type: 'bar',
+        data: {
+            labels: ['0-18', '19-35', '36-60', '60+'],
+            datasets: [{
+                label: 'Patients',
+                data: [{{ pat_stats.age_groups['0-18'] }}, {{ pat_stats.age_groups['19-35'] }}, {{ pat_stats.age_groups['36-60'] }}, {{ pat_stats.age_groups['60+'] }}],
+                backgroundColor: '#0dcaf0',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+
+    // 4. QR Usage Chart
+    new Chart(document.getElementById('qrChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Generated', 'Scanned Successfully', 'Invalid/Failed'],
+            datasets: [{
+                label: 'QR Codes',
+                data: [{{ qr_stats.generated }}, {{ qr_stats.scanned }}, {{ qr_stats.invalid }}],
+                backgroundColor: ['#0d6efd', '#198754', '#dc3545'],
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+});
+</script>
+{% endblock %}

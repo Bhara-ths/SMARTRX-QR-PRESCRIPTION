@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-primary"><i class="bi bi-file-medical"></i> Prescription History</h2>
+    <a href="{{ url_for('doctor.new_prescription') }}" class="btn btn-primary shadow-sm">
+        <i class="bi bi-plus-circle"></i> New Prescription
+    </a>
+</div>
+
+<div class="card shadow-sm border-0 rounded-lg mb-4">
+    <div class="card-body bg-light rounded-top">
+        <form method="GET" action="{{ url_for('doctor.prescriptions_list') }}" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small text-muted">Search Patient</label>
+                <input type="text" name="patient" class="form-control form-control-sm" placeholder="Name, ID..." value="{{ request.args.get('patient', '') }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted">Date</label>
+                <input type="date" name="date" class="form-control form-control-sm" value="{{ request.args.get('date', '') }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted">Status</label>
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">All Statuses</option>
+                    <option value="Active" {% if request.args.get('status') == 'Active' %}selected{% endif %}>Active</option>
+                    <option value="Completed" {% if request.args.get('status') == 'Completed' %}selected{% endif %}>Completed</option>
+                    <option value="Cancelled" {% if request.args.get('status') == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-grid">
+                <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light text-secondary">
+                <tr>
+                    <th class="ps-4">Date</th>
+                    <th>Patient</th>
+                    <th>Diagnosis</th>
+                    <th>Status</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rx in prescriptions %}
+                <tr>
+                    <td class="ps-4">
+                        <span class="d-block fw-bold">{{ rx.created_at.strftime('%Y-%m-%d') }}</span>
+                        <small class="text-muted">{{ rx.created_at.strftime('%H:%M') }}</small>
+                    </td>
+                    <td>
+                        <span class="d-block text-primary fw-bold">{{ rx.patient.first_name }} {{ rx.patient.last_name }}</span>
+                        <small class="text-muted">{{ rx.patient.patient_uid }}</small>
+                    </td>
+                    <td>{{ rx.diagnosis[:30] }}{% if rx.diagnosis|length > 30 %}...{% endif %}</td>
+                    <td>
+                        <span class="badge {% if rx.status == 'Active' %}bg-success{% elif rx.status == 'Cancelled' %}bg-danger{% else %}bg-secondary{% endif %} rounded-pill">
+                            {{ rx.status }}
+                        </span>
+                    </td>
+                    <td class="text-end pe-4">
+                        <div class="btn-group shadow-sm">
+                            <a href="{{ url_for('doctor.view_prescription', uuid=rx.uuid) }}" class="btn btn-sm btn-outline-info" title="View"><i class="bi bi-eye"></i></a>
+                            <a href="{{ url_for('doctor.prescription_pdf', uuid=rx.uuid) }}" class="btn btn-sm btn-outline-danger" title="PDF" target="_blank"><i class="bi bi-file-earmark-pdf"></i></a>
+                            <a href="{{ url_for('doctor.edit_prescription', uuid=rx.uuid) }}" class="btn btn-sm btn-outline-primary" title="Edit"><i class="bi bi-pencil"></i></a>
+                            <form method="POST" action="{{ url_for('doctor.delete_prescription', uuid=rx.uuid) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this prescription?');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center py-5 text-muted">
+                        <i class="bi bi-file-earmark-x display-4 d-block mb-3"></i>
+                        No prescriptions found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

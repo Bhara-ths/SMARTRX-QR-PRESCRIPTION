@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h2 class="fw-bold text-primary mb-1"><i class="bi bi-person-badge me-2"></i>My Profile</h2>
+            <p class="text-muted mb-0">Manage your personal information and account settings.</p>
+        </div>
+        <div class="col-md-6 text-md-end mt-3 mt-md-0">
+            <a href="{{ url_for('patient.dashboard') }}" class="btn btn-outline-secondary px-4 rounded-pill shadow-sm">
+                <i class="bi bi-arrow-left me-1"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Profile Summary -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 rounded-4 mb-4">
+                <div class="card-body p-4 text-center">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px;">
+                        <i class="bi bi-person-fill fs-1"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark mb-1">{{ patient.full_name }}</h4>
+                    <p class="text-muted mb-3">Patient ID: {{ patient.patient_uid }}</p>
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill px-3 py-2 fw-medium mb-4">Active Member</span>
+                    
+                    <ul class="list-unstyled text-start mb-0">
+                        <li class="mb-3">
+                            <span class="text-muted small d-block text-uppercase">Email Address</span>
+                            <span class="fw-medium text-dark"><i class="bi bi-envelope me-2 text-primary"></i>{{ current_user.email }}</span>
+                        </li>
+                        <li class="mb-3">
+                            <span class="text-muted small d-block text-uppercase">Age & Gender</span>
+                            <span class="fw-medium text-dark"><i class="bi bi-gender-ambiguous me-2 text-primary"></i>{{ patient.age }} yrs / {{ patient.gender }}</span>
+                        </li>
+                        <li class="mb-3">
+                            <span class="text-muted small d-block text-uppercase">Blood Group</span>
+                            <span class="fw-medium text-danger"><i class="bi bi-droplet-fill me-2"></i>{{ patient.blood_group or 'Not Specified' }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Profile Form -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4">
+                    <h5 class="fw-bold text-primary mb-0"><i class="bi bi-pencil-square me-2"></i>Edit Details</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('patient.profile') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <h6 class="fw-bold text-dark mb-3">Contact Information</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-medium">Phone Number</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-telephone text-primary"></i></span>
+                                    <input type="tel" class="form-control border-start-0 bg-light" name="phone" value="{{ patient.phone }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-medium">Emergency Contact</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-heart-pulse text-danger"></i></span>
+                                    <input type="tel" class="form-control border-start-0 bg-light" name="emergency_contact" value="{{ patient.emergency_contact or '' }}" placeholder="Enter emergency number">
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label text-muted small fw-medium">Residential Address</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-geo-alt text-primary"></i></span>
+                                    <textarea class="form-control border-start-0 bg-light" name="address" rows="2">{{ patient.address or '' }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="text-muted opacity-25 mb-4">
+
+                        <h6 class="fw-bold text-dark mb-3">Security</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-medium">New Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock text-primary"></i></span>
+                                    <input type="password" class="form-control border-start-0 bg-light" name="password" placeholder="Leave blank to keep current">
+                                </div>
+                                <small class="text-muted mt-1">Only fill this if you want to change your password.</small>
+                            </div>
+                        </div>
+
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary rounded-pill px-4 fw-medium shadow-sm">
+                                <i class="bi bi-save me-1"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

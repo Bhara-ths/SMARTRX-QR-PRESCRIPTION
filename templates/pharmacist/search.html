@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h2 class="fw-bold text-primary mb-1"><i class="bi bi-search me-2"></i>Global Search</h2>
+            <p class="text-muted mb-0">Search prescriptions by ID, Patient Name, Phone, Doctor Name, or Medicine Name.</p>
+        </div>
+        <div class="col-md-6 text-md-end mt-3 mt-md-0">
+            <a href="{{ url_for('pharmacist.dashboard') }}" class="btn btn-outline-secondary px-4 rounded-pill shadow-sm">
+                <i class="bi bi-arrow-left me-1"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 bg-primary bg-opacity-10 p-4">
+                <form method="GET" action="{{ url_for('pharmacist.search') }}" class="d-flex bg-white rounded-pill shadow-sm overflow-hidden p-1">
+                    <span class="input-group-text bg-transparent border-0 text-primary ps-4"><i class="bi bi-search fs-5"></i></span>
+                    <input type="text" name="q" class="form-control form-control-lg border-0 shadow-none bg-transparent" placeholder="Enter patient, doctor, medicine, phone, or Rx ID..." value="{{ query }}" autofocus autocomplete="off">
+                    <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold">Search</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results -->
+    {% if query %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center mb-4">
+                <h5 class="mb-0 text-dark fw-bold">Search Results</h5>
+                <span class="badge bg-secondary rounded-pill ms-3 px-3 py-2">{{ results|length }} found</span>
+                <div class="ms-auto">
+                    <span class="text-muted small">Showing results for <strong class="text-dark">"{{ query }}"</strong></span>
+                </div>
+            </div>
+            
+            {% if results %}
+            <div class="row g-4">
+                {% for rx in results %}
+                <div class="col-md-6 col-xl-4">
+                    <div class="card shadow-sm h-100 border-0 rounded-4 hover-shadow transition">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold fs-5" style="width: 45px; height: 45px;">
+                                        {{ rx.patient.full_name[0] }}
+                                    </div>
+                                    <div>
+                                        <h5 class="card-title mb-0 fw-bold text-dark"><a href="{{ url_for('pharmacist.patient_view', patient_id=rx.patient.patient_id) }}" class="text-decoration-none text-dark">{{ rx.patient.full_name }}</a></h5>
+                                        <span class="badge bg-light text-dark border small mt-1">ID: {{ rx.patient.patient_uid }}</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="badge bg-{{ 'success' if rx.status == 'Active' else 'secondary' }} rounded-pill">{{ rx.status }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-light rounded p-3 mb-4">
+                                <div class="row g-2 small text-muted">
+                                    <div class="col-6">
+                                        <i class="bi bi-telephone text-primary me-1"></i> {{ rx.patient.phone or 'N/A' }}
+                                    </div>
+                                    <div class="col-6">
+                                        <i class="bi bi-calendar text-primary me-1"></i> {{ rx.created_at.strftime('%b %d, %Y') }}
+                                    </div>
+                                    <div class="col-12 mt-2">
+                                        <i class="bi bi-upc-scan text-primary me-1"></i> Rx ID: <span class="font-monospace text-dark fw-bold">{{ rx.uuid[:8] | upper }}...</span>
+                                    </div>
+                                    <div class="col-12 mt-2">
+                                        <i class="bi bi-person-heart text-primary me-1"></i> Dr. {{ rx.doctor.full_name }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <a href="{{ url_for('pharmacist.dispense', uuid=rx.uuid) }}" class="btn btn-outline-primary w-100 rounded-pill fw-bold">
+                                <i class="bi bi-capsule me-2"></i>Open Dispense View
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-light border border-2 border-dashed shadow-sm rounded-4 text-center p-5">
+                <div class="text-muted">
+                    <i class="bi bi-search fs-1 d-block mb-3 text-secondary"></i>
+                    <h4 class="fw-bold text-dark">No Results Found</h4>
+                    <p class="mb-0">We couldn't find any prescriptions matching <strong class="text-primary">"{{ query }}"</strong>.</p>
+                    <p class="small text-muted mt-2">Check the spelling or try searching with a different term.</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .hover-shadow:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        transform: translateY(-2px);
+    }
+    .transition {
+        transition: all 0.2s ease-in-out;
+    }
+    .border-dashed {
+        border-style: dashed !important;
+    }
+</style>
+{% endblock %}

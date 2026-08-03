@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-primary fw-bold mb-0">
+                <i class="bi bi-calendar-plus me-2"></i>Request Appointment
+            </h2>
+            <a href="{{ url_for('patient.appointments') }}" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="bi bi-arrow-left me-2"></i>Back
+            </a>
+        </div>
+
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-body p-5">
+                <div class="alert alert-info border-0 rounded-3 mb-4 d-flex align-items-start">
+                    <i class="bi bi-info-circle-fill fs-4 me-3"></i>
+                    <div>
+                        <h6 class="fw-bold mb-1">How Appointment Requests Work</h6>
+                        <p class="mb-0 small">Please submit your preferred date and time. This will tentatively schedule your appointment with the selected doctor. The clinic will contact you if there are scheduling conflicts.</p>
+                    </div>
+                </div>
+
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark">Select Doctor</label>
+                        <select name="doctor_id" class="form-select border-start-0 border-end-0 border-top-0 rounded-0 shadow-none px-0 {% if form.doctor_id.errors %}is-invalid{% endif %}" required>
+                            <option value="">Choose a doctor...</option>
+                            {% for doc in doctors %}
+                                <option value="{{ doc.doctor_id }}">{{ doc.full_name }} - {{ doc.specialization or doc.department }}</option>
+                            {% endfor %}
+                        </select>
+                        {% if form.doctor_id.errors %}<div class="invalid-feedback">{{ form.doctor_id.errors[0] }}</div>{% endif %}
+                    </div>
+
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark">Preferred Date</label>
+                            {{ form.appointment_date(class="form-control bg-light border-0 rounded-3 p-3" + (" is-invalid" if form.appointment_date.errors else "")) }}
+                            {% if form.appointment_date.errors %}<div class="invalid-feedback">{{ form.appointment_date.errors[0] }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark">Preferred Time</label>
+                            {{ form.appointment_time(class="form-control bg-light border-0 rounded-3 p-3" + (" is-invalid" if form.appointment_time.errors else "")) }}
+                            {% if form.appointment_time.errors %}<div class="invalid-feedback">{{ form.appointment_time.errors[0] }}</div>{% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark">Appointment Type</label>
+                        {{ form.appointment_type(class="form-select bg-light border-0 rounded-3 p-3" + (" is-invalid" if form.appointment_type.errors else "")) }}
+                        {% if form.appointment_type.errors %}<div class="invalid-feedback">{{ form.appointment_type.errors[0] }}</div>{% endif %}
+                    </div>
+
+                    <div class="mb-5">
+                        <label class="form-label fw-bold text-dark">Reason For Visit</label>
+                        {{ form.reason_for_visit(class="form-control bg-light border-0 rounded-3 p-3" + (" is-invalid" if form.reason_for_visit.errors else ""), placeholder="Briefly describe your symptoms or reason for visit") }}
+                        {% if form.reason_for_visit.errors %}<div class="invalid-feedback">{{ form.reason_for_visit.errors[0] }}</div>{% endif %}
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill shadow-sm py-3 fw-bold">
+                            Submit Request <i class="bi bi-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h2 class="fw-bold text-primary mb-1"><i class="bi bi-clock-history me-2"></i>Dispensing History</h2>
+            <p class="text-muted mb-0">Track all medicine dispensing actions</p>
+        </div>
+        <div class="col-md-6 text-md-end mt-3 mt-md-0">
+            <a href="{{ url_for('pharmacist.dashboard') }}" class="btn btn-outline-secondary px-4 rounded-pill shadow-sm">
+                <i class="bi bi-arrow-left me-1"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-body p-4">
+            <form method="GET" action="{{ url_for('pharmacist.history') }}" class="row g-3 align-items-center">
+                <div class="col-md-8 col-lg-6">
+                    <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden">
+                        <span class="input-group-text bg-white border-end-0 text-primary"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" class="form-control border-start-0 ps-0 focus-none" placeholder="Search by Patient Name or Rx ID..." value="{{ search }}">
+                        <button type="submit" class="btn btn-primary px-4">Search</button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    {% if search %}
+                    <a href="{{ url_for('pharmacist.history') }}" class="btn btn-light text-muted rounded-pill px-3 shadow-sm border"><i class="bi bi-x-circle me-1"></i>Clear Filters</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light text-muted text-uppercase" style="font-size: 0.85rem;">
+                        <tr>
+                            <th class="ps-4 py-3">Date & Time</th>
+                            <th>Medicine Details</th>
+                            <th>Patient Info</th>
+                            <th>Qty</th>
+                            <th>Status</th>
+                            <th class="pe-4">Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in pagination.items %}
+                        <tr>
+                            <td class="ps-4 py-3">
+                                <div class="fw-medium text-dark">{{ item.dispensed_at.strftime('%b %d, %Y') }}</div>
+                                <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ item.dispensed_at.strftime('%I:%M %p') }}</small>
+                            </td>
+                            <td>
+                                <h6 class="mb-1 fw-bold text-primary">{{ item.prescription_medicine.medicine.medicine_name }}</h6>
+                                <small class="text-muted">Rx ID: <a href="{{ url_for('pharmacist.dispense', uuid=item.prescription_medicine.prescription.uuid) }}" class="text-decoration-none fw-medium">{{ item.prescription_medicine.prescription.uuid[:8] | upper }}</a></small>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold" style="width: 35px; height: 35px;">
+                                        {{ item.prescription_medicine.prescription.patient.full_name[0] }}
+                                    </div>
+                                    <a href="{{ url_for('pharmacist.patient_view', patient_id=item.prescription_medicine.prescription.patient_id) }}" class="text-decoration-none text-dark fw-medium hover-primary">
+                                        {{ item.prescription_medicine.prescription.patient.full_name }}
+                                    </a>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border px-2 py-1 fs-6">{{ item.quantity }}</span>
+                            </td>
+                            <td>
+                                {% if item.status == 'Fully Dispensed' or item.status == 'Dispensed' %}
+                                <span class="badge bg-success rounded-pill px-3 py-2"><i class="bi bi-check-circle me-1"></i>Dispensed</span>
+                                {% elif item.status == 'Partially Dispensed' %}
+                                <span class="badge bg-info rounded-pill px-3 py-2"><i class="bi bi-pie-chart me-1"></i>Partial</span>
+                                {% elif item.status == 'Not Available' %}
+                                <span class="badge bg-danger rounded-pill px-3 py-2"><i class="bi bi-x-circle me-1"></i>Out of Stock</span>
+                                {% else %}
+                                <span class="badge bg-secondary rounded-pill px-3 py-2">{{ item.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="pe-4">
+                                <span class="text-muted small text-wrap d-block" style="max-width: 150px;">{{ item.remarks or '-' }}</span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+                                    <h5 class="fw-medium">No dispensing history found</h5>
+                                    <p class="small">Try adjusting your search criteria.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% if pagination.pages > 1 %}
+        <div class="card-footer bg-white border-0 py-4">
+            <nav>
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                        <a class="page-link rounded-start-pill px-3" href="{{ url_for('pharmacist.history', page=pagination.prev_num, search=search) }}">Previous</a>
+                    </li>
+                    {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                        {% if p %}
+                            <li class="page-item {% if pagination.page == p %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('pharmacist.history', page=p, search=search) }}">{{ p }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link border-0">...</span></li>
+                        {% endif %}
+                    {% endfor %}
+                    <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                        <a class="page-link rounded-end-pill px-3" href="{{ url_for('pharmacist.history', page=pagination.next_num, search=search) }}">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .focus-none:focus {
+        box-shadow: none !important;
+    }
+    .hover-primary:hover {
+        color: var(--bs-primary) !important;
+        text-decoration: underline !important;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm mt-4 border-0 rounded-lg">
+            <div class="card-header bg-primary text-white py-3">
+                <h4 class="mb-0">Create New Prescription</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="">
+                    {{ form.hidden_tag() }}
+                    
+                    <h5 class="text-secondary mb-3">Patient Details</h5>
+                    
+                    <div class="mb-4 position-relative">
+                        <label class="form-label fw-bold">Search Patient (Name, Phone, ID)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="text" id="patientSearchInput" class="form-control" placeholder="Type to search..." autocomplete="off">
+                        </div>
+                        <div id="patientSearchResults" class="list-group position-absolute w-100 shadow-sm mt-1" style="display: none; z-index: 1000; max-height: 200px; overflow-y: auto;"></div>
+                        
+                        {% if form.patient_id.errors %}
+                            <div class="text-danger small mt-1">{% for error in form.patient_id.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+
+                    <div id="selectedPatientCard" class="card border-primary bg-light mb-4" style="display: none;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="card-title mb-0 text-primary" id="spName"></h6>
+                                <button type="button" class="btn btn-sm btn-outline-danger" id="clearPatientBtn"><i class="bi bi-x"></i> Remove</button>
+                            </div>
+                            <div class="row small text-muted">
+                                <div class="col-sm-6"><i class="bi bi-person-badge"></i> <span id="spUid"></span></div>
+                                <div class="col-sm-6"><i class="bi bi-telephone"></i> <span id="spPhone"></span></div>
+                                <div class="col-sm-6"><i class="bi bi-gender-ambiguous"></i> <span id="spGenderAge"></span></div>
+                                <div class="col-sm-6"><i class="bi bi-droplet"></i> <span id="spBlood"></span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+                    <h5 class="text-secondary mb-3">Prescription Details</h5>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">{{ form.diagnosis.label }}</label>
+                        {{ form.diagnosis(class="form-control", placeholder="Enter diagnosis...") }}
+                        {% if form.diagnosis.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.diagnosis.errors %}<span>{{ error }}</span>{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">{{ form.symptoms.label }}</label>
+                        {{ form.symptoms(class="form-control", rows="3", placeholder="List patient symptoms...") }}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">{{ form.clinical_notes.label }}</label>
+                        {{ form.clinical_notes(class="form-control", rows="3", placeholder="Any additional notes...") }}
+                    </div>
+                    
+                    <hr class="my-4">
+                    <h5 class="text-secondary mb-3">Vitals & Clinical Data</h5>
+                    <div class="row mb-4">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label fw-bold">{{ form.blood_pressure.label }}</label>
+                            {{ form.blood_pressure(class="form-control", placeholder="e.g. 120/80") }}
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label fw-bold">{{ form.pulse.label }}</label>
+                            {{ form.pulse(class="form-control", placeholder="e.g. 72") }}
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label fw-bold">{{ form.temperature.label }}</label>
+                            {{ form.temperature(class="form-control", placeholder="e.g. 98.6") }}
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label fw-bold">{{ form.oxygen_saturation.label }}</label>
+                            {{ form.oxygen_saturation(class="form-control", placeholder="e.g. 98") }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">{{ form.follow_up_date.label }}</label>
+                            {{ form.follow_up_date(class="form-control", type="date") }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">{{ form.status.label }}</label>
+                            {{ form.status(class="form-select") }}
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="text-secondary mb-0">Prescribe Medicines</h5>
+                        <button type="button" class="btn btn-sm btn-outline-success" id="addMedicineBtn">
+                            <i>+</i> Add Medicine
+                        </button>
+                    </div>
+                    
+                    <div id="medicinesContainer">
+                        <!-- Medicine rows will be added here by JS -->
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{{ url_for('doctor.dashboard') }}" class="btn btn-outline-secondary me-md-2">Cancel</a>
+                        {{ form.submit(class="btn btn-primary px-4") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Dynamic Medicines -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('patientSearchInput');
+        const searchResults = document.getElementById('patientSearchResults');
+        const patientIdField = document.getElementById('patient_id');
+        const selectedPatientCard = document.getElementById('selectedPatientCard');
+        const clearPatientBtn = document.getElementById('clearPatientBtn');
+        
+        let searchTimeout;
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                const query = this.value.trim();
+                
+                if (query.length < 2) {
+                    searchResults.style.display = 'none';
+                    return;
+                }
+                
+                searchTimeout = setTimeout(() => {
+                    fetch(`{{ url_for('doctor.api_search_patient') }}?q=${encodeURIComponent(query)}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            searchResults.innerHTML = '';
+                            if (data.length > 0) {
+                                data.forEach(p => {
+                                    const a = document.createElement('a');
+                                    a.href = '#';
+                                    a.className = 'list-group-item list-group-item-action';
+                                    a.innerHTML = `<strong>${p.name}</strong> (${p.uid}) - ${p.phone}`;
+                                    a.addEventListener('click', function(e) {
+                                        e.preventDefault();
+                                        selectPatient(p);
+                                    });
+                                    searchResults.appendChild(a);
+                                });
+                                searchResults.style.display = 'block';
+                            } else {
+                                searchResults.innerHTML = '<div class="list-group-item text-muted">No patients found.</div>';
+                                searchResults.style.display = 'block';
+                            }
+                        });
+                }, 300);
+            });
+            
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && searchResults && !searchResults.contains(e.target)) {
+                    searchResults.style.display = 'none';
+                }
+            });
+            
+            clearPatientBtn.addEventListener('click', function() {
+                patientIdField.value = '';
+                selectedPatientCard.style.display = 'none';
+                searchInput.closest('.mb-4').style.display = 'block';
+                searchInput.focus();
+            });
+        }
+        
+        function selectPatient(p) {
+            patientIdField.value = p.id;
+            if(searchInput) searchInput.value = '';
+            if(searchResults) searchResults.style.display = 'none';
+            
+            document.getElementById('spName').textContent = p.name;
+            document.getElementById('spUid').textContent = p.uid;
+            document.getElementById('spPhone').textContent = p.phone;
+            document.getElementById('spGenderAge').textContent = p.gender + ' / ' + (p.age || 'N/A') + ' yrs';
+            document.getElementById('spBlood').textContent = (p.blood_group || 'Unknown');
+            
+            if(searchInput) searchInput.closest('.mb-4').style.display = 'none';
+            selectedPatientCard.style.display = 'block';
+        }
+
+        // Handle preselect patient from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const preselectId = urlParams.get('preselect_patient');
+        if (preselectId) {
+            // Can be implemented by passing it from flask or just letting user search
+        }
+
+        // Existing medicine code
+        const container = document.getElementById('medicinesContainer');
+        const addBtn = document.getElementById('addMedicineBtn');
+        let medicineCount = 0;
+        
+        function addMedicineRow() {
+            medicineCount++;
+            
+            const row = document.createElement('div');
+            row.className = 'medicine-row bg-light p-3 rounded mb-3 border border-light';
+            row.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0 text-primary">Medicine #${medicineCount}</h6>
+                    ${medicineCount > 1 ? '<button type="button" class="btn btn-sm btn-outline-danger remove-btn"><i class="bi bi-trash"></i> Remove</button>' : ''}
+                </div>
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <label class="form-label small">Medicine Name <span class="text-danger">*</span></label>
+                        <input type="text" name="medicine_name[]" class="form-control form-control-sm" placeholder="e.g. Paracetamol" required>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <label class="form-label small">Type</label>
+                        <select name="medicine_type[]" class="form-select form-select-sm">
+                            <option value="Tablet">Tablet</option>
+                            <option value="Capsule">Capsule</option>
+                            <option value="Syrup">Syrup</option>
+                            <option value="Injection">Injection</option>
+                            <option value="Drops">Drops</option>
+                            <option value="Ointment">Ointment</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <label class="form-label small">Strength</label>
+                        <input type="text" name="strength[]" class="form-control form-control-sm" placeholder="e.g. 500mg">
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <label class="form-label small">Dosage</label>
+                        <input type="text" name="dosage[]" class="form-control form-control-sm" placeholder="e.g. 1 Tab">
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <label class="form-label small">Timing (M - A - N)</label>
+                        <div class="d-flex gap-2">
+                            <input type="text" name="morning[]" class="form-control form-control-sm text-center" placeholder="M" title="Morning">
+                            <input type="text" name="afternoon[]" class="form-control form-control-sm text-center" placeholder="A" title="Afternoon">
+                            <input type="text" name="night[]" class="form-control form-control-sm text-center" placeholder="N" title="Night">
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-3 mb-2">
+                        <label class="form-label small">Frequency</label>
+                        <input type="text" name="frequency[]" class="form-control form-control-sm" placeholder="e.g. Daily">
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <label class="form-label small">Duration</label>
+                        <input type="text" name="duration[]" class="form-control form-control-sm" placeholder="e.g. 5 Days">
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <label class="form-label small">Food</label>
+                        <select name="food_relation[]" class="form-select form-select-sm">
+                            <option value="Anytime">Anytime</option>
+                            <option value="Before Food">Before Food</option>
+                            <option value="After Food">After Food</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <label class="form-label small">Instructions</label>
+                        <input type="text" name="instructions[]" class="form-control form-control-sm" placeholder="e.g. With warm water">
+                    </div>
+                </div>
+            `;
+            container.appendChild(row);
+            
+            if (medicineCount > 1) {
+                row.querySelector('.remove-btn').addEventListener('click', function() {
+                    row.remove();
+                    updateMedicineNumbers();
+                });
+            }
+        }
+        
+        function updateMedicineNumbers() {
+            const rows = container.querySelectorAll('.medicine-row');
+            let count = 1;
+            rows.forEach(row => {
+                row.querySelector('h6').textContent = 'Medicine #' + count;
+                count++;
+            });
+            medicineCount = count - 1;
+        }
+
+        // Add first row by default
+        addMedicineRow();
+
+        // Add button listener
+        if(addBtn) addBtn.addEventListener('click', addMedicineRow);
+    });
+</script>
+{% endblock %}

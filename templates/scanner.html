@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6 text-center">
+            <h2 class="fw-bold text-primary mb-3"><i class="bi bi-qr-code-scan me-2"></i>Scan Prescription QR</h2>
+            <p class="text-muted mb-4">Point your camera at the QR code printed on the SmartRx prescription to securely verify and view its details.</p>
+            
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-primary text-white py-3 border-0">
+                    <h5 class="mb-0"><i class="bi bi-camera me-2"></i>Camera Scanner</h5>
+                </div>
+                <div class="card-body p-0 position-relative bg-light">
+                    <!-- Scanner Container -->
+                    <div id="qr-reader" class="w-100" style="min-height: 300px;"></div>
+                    
+                    <!-- Loading Overlay -->
+                    <div id="loading-overlay" class="position-absolute top-0 start-0 w-100 h-100 bg-white d-none justify-content-center align-items-center opacity-75" style="z-index: 10;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-0 pt-3 pb-4">
+                    <div id="qr-reader-results" class="alert alert-success fw-bold p-3 mb-0 shadow-sm d-none">
+                        <i class="bi bi-check-circle-fill me-2"></i>Valid QR Found! Redirecting...
+                    </div>
+                    <div id="qr-error" class="alert alert-danger small p-3 mb-0 shadow-sm d-none">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i><span id="qr-error-text">Invalid QR format. Please scan a valid SmartRx prescription.</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <a href="{{ url_for('pharmacist.dashboard') if current_user.is_authenticated and current_user.role == 'pharmacist' else url_for('auth.login') }}" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- html5-qrcode library -->
+<script src="https://unpkg.com/html5-qrcode"></script>
+<style>
+    /* Styling for the html5-qrcode generated elements */
+    #qr-reader { border: none !important; }
+    #qr-reader__scan_region { background: #f8f9fa; }
+    #qr-reader__dashboard_section_csr button {
+        background-color: var(--bs-primary);
+        color: white;
+        border: none;
+        border-radius: 50rem;
+        padding: 0.5rem 1.5rem;
+        margin: 0.5rem;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    #qr-reader__dashboard_section_csr button:hover {
+        background-color: #0056b3;
+    }
+    #qr-reader__dashboard_section_swaplink { text-decoration: none; color: var(--bs-primary); font-weight: 600; }
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let isScanned = false;
+        
+        function onScanSuccess(decodedText, decodedResult) {
+            if (isScanned) return;
+            
+            // Extract the UUID from something like: http://.../prescription/view/<uuid>
+            // or maybe it's just the uuid directly
+            let maybeUuid = decodedText;
+            if (decodedText.includes('/')) {
+                const urlParts = decodedText.split('/');
+                maybeUuid = urlParts[urlParts.length - 1];
+            }
+            
+            if (maybeUuid && maybeUuid.length > 20) {
+                isScanned = true;
+                document.getElementById('qr-reader-results').classList.remove('d-none');
+                document.getElementById('qr-error').classList.add('d-none');
+                document.getElementById('loading-overlay').classList.remove('d-none');
+                document.getElementById('loading-overlay').classList.add('d-flex');
+                
+                // Redirect to the processing route
+                window.location.href = "/process_scan/" + maybeUuid;
+            } else {
+                document.getElementById('qr-error').classList.remove('d-none');
+                document.getElementById('qr-error-text').innerText = 'Invalid SmartRx QR Code detected.';
+            }
+        }
+
+        function onScanFailure(error) {
+            // keep scanning silently
+        }
+
+        let html5QrcodeScanner = new Html5QrcodeScanner(
+            "qr-reader",
+            { fps: 10, qrbox: {width: 250, height: 250}, aspectRatio: 1.0 },
+            /* verbose= */ false);
+        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    });
+</script>
+{% endblock %}

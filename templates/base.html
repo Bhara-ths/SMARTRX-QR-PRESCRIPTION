@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart AI Prescription System</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('auth.login') }}">
+                {% if current_hospital and current_hospital.logo_path %}
+                    <img src="{{ url_for('static', filename='uploads/logos/' + current_hospital.logo_path) }}" alt="Logo" height="32" class="me-2 rounded bg-white p-1 shadow-sm" style="object-fit: contain;">
+                {% else %}
+                    <i class="bi bi-hospital me-2"></i>
+                {% endif %}
+                <span class="fw-bold">{{ current_hospital.name if current_hospital else 'Smart Rx' }}</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            {% if current_user.role == 'admin' %}
+                                <a class="nav-link" href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+                            {% elif current_user.role == 'doctor' %}
+                                <a class="nav-link" href="{{ url_for('doctor.dashboard') }}">Dashboard</a>
+                            {% elif current_user.role == 'patient' %}
+                                <a class="nav-link" href="{{ url_for('patient.dashboard') }}">Dashboard</a>
+                            {% elif current_user.role == 'pharmacist' %}
+                                <a class="nav-link" href="{{ url_for('pharmacist.dashboard') }}">Dashboard</a>
+                            {% endif %}
+                        </li>
+                        <li class="nav-item">
+                            {% if current_user.role == 'admin' %}
+                                <a class="nav-link" href="{{ url_for('admin.doctors') }}">Doctors</a>
+                            {% elif current_user.role == 'doctor' %}
+                                <a class="nav-link" href="{{ url_for('doctor.appointments_list') }}">Appointments</a>
+                            {% elif current_user.role == 'patient' %}
+                                <a class="nav-link" href="{{ url_for('patient.appointments') }}">Appointments</a>
+                            {% elif current_user.role == 'pharmacist' %}
+                                <a class="nav-link" href="{{ url_for('pharmacist.appointments') }}">Appointments</a>
+                            {% endif %}
+                        </li>
+                        {% if current_user.role == 'patient' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('patient.notifications') }}">
+                                Notifications 
+                                {% if unread_notifications_count and unread_notifications_count > 0 %}
+                                    <span class="badge bg-danger rounded-pill">{{ unread_notifications_count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% if current_user.role == 'admin' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin.hospitals') }}">Hospitals</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin.patients') }}">Patients</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin.pharmacists') }}">Pharmacists</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin.reports') }}">Reports</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin.global_search') }}"><i class="bi bi-search"></i> Search</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin.settings') }}"><i class="bi bi-gear"></i></a>
+                        </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <span class="nav-link text-white fw-bold ms-3">| {{ current_user.username }}</span>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.register') }}">Register</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Hospital Footer -->
+    <footer class="bg-dark text-light py-4 mt-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6 mb-4 mb-md-0">
+                    <h5 class="fw-bold mb-3 d-flex align-items-center">
+                        {% if current_hospital and current_hospital.logo_path %}
+                            <img src="{{ url_for('static', filename='uploads/logos/' + current_hospital.logo_path) }}" alt="Logo" height="28" class="me-2 rounded bg-white p-1">
+                        {% else %}
+                            <i class="bi bi-heart-pulse-fill text-danger me-2"></i>
+                        {% endif %}
+                        {{ current_hospital.name if current_hospital else 'Smart Rx Platform' }}
+                    </h5>
+                    {% if current_hospital %}
+                    <p class="mb-1 text-muted small"><i class="bi bi-geo-alt-fill me-2"></i>{{ current_hospital.address }}, {{ current_hospital.city }}</p>
+                    <p class="mb-1 text-muted small"><i class="bi bi-telephone-fill me-2"></i>{{ current_hospital.phone }}</p>
+                    <p class="mb-0 text-muted small"><i class="bi bi-envelope-fill me-2"></i>{{ current_hospital.email }}</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-6 text-md-end text-muted small">
+                    <p class="mb-1"><strong>Emergency:</strong> {{ current_hospital.emergency_contact if current_hospital else '911' }}</p>
+                    <p class="mb-0">Powered by SmartRx &copy; 2026</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

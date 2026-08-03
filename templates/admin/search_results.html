@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-primary mb-1"><i class="bi bi-search me-2"></i>Global Search</h2>
+            <p class="text-muted mb-0">Search across Patients, Doctors, Prescriptions, and Medicines.</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-body p-4">
+            <form action="{{ url_for('admin.global_search') }}" method="GET" class="d-flex">
+                <input type="text" name="q" class="form-control form-control-lg rounded-pill me-2" placeholder="Search by name, ID, or diagnosis..." value="{{ query }}">
+                <button type="submit" class="btn btn-primary rounded-pill px-4"><i class="bi bi-search me-2"></i>Search</button>
+            </form>
+        </div>
+    </div>
+
+    {% if query %}
+        <h5 class="fw-bold mb-4 text-dark">Search Results for "{{ query }}"</h5>
+        
+        <div class="row g-4">
+            <!-- Patients -->
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0 rounded-4 h-100">
+                    <div class="card-header bg-white py-3 border-0">
+                        <h6 class="m-0 fw-bold text-primary"><i class="bi bi-person me-2"></i>Patients ({{ results.patients|length }})</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if results.patients %}
+                            <div class="list-group list-group-flush">
+                                {% for patient in results.patients %}
+                                <div class="list-group-item p-3 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong class="text-dark">{{ patient.full_name }}</strong><br>
+                                        <small class="text-muted">UID: {{ patient.patient_uid }} | Phone: {{ patient.phone }}</small>
+                                    </div>
+                                    <span class="badge bg-light text-dark border rounded-pill px-3 py-2">View</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <p class="text-muted mb-0 small">No patients found.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Doctors -->
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0 rounded-4 h-100">
+                    <div class="card-header bg-white py-3 border-0">
+                        <h6 class="m-0 fw-bold text-info"><i class="bi bi-heart-pulse me-2"></i>Doctors ({{ results.doctors|length }})</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if results.doctors %}
+                            <div class="list-group list-group-flush">
+                                {% for doctor in results.doctors %}
+                                <div class="list-group-item p-3 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong class="text-dark">Dr. {{ doctor.full_name }}</strong><br>
+                                        <small class="text-muted">{{ doctor.specialization or 'General' }}</small>
+                                    </div>
+                                    <span class="badge bg-light text-dark border rounded-pill px-3 py-2">View</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <p class="text-muted mb-0 small">No doctors found.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prescriptions -->
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0 rounded-4 h-100">
+                    <div class="card-header bg-white py-3 border-0">
+                        <h6 class="m-0 fw-bold text-success"><i class="bi bi-file-medical me-2"></i>Prescriptions ({{ results.prescriptions|length }})</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if results.prescriptions %}
+                            <div class="list-group list-group-flush">
+                                {% for rx in results.prescriptions %}
+                                <div class="list-group-item p-3 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong class="text-dark">ID: {{ rx.uuid[:8] }}</strong><br>
+                                        <small class="text-muted">Diagnosis: {{ rx.diagnosis }}</small>
+                                    </div>
+                                    <span class="badge bg-light text-dark border rounded-pill px-3 py-2">View</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <p class="text-muted mb-0 small">No prescriptions found.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medicines -->
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0 rounded-4 h-100">
+                    <div class="card-header bg-white py-3 border-0">
+                        <h6 class="m-0 fw-bold text-warning"><i class="bi bi-capsule me-2"></i>Medicines ({{ results.medicines|length }})</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if results.medicines %}
+                            <div class="list-group list-group-flush">
+                                {% for med in results.medicines %}
+                                <div class="list-group-item p-3 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong class="text-dark">{{ med.medicine_name }}</strong><br>
+                                        <small class="text-muted">{{ med.type }} | In Stock: {{ med.stock_quantity }}</small>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <p class="text-muted mb-0 small">No medicines found.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-search text-muted fs-1 d-block mb-3 opacity-50"></i>
+            <h5 class="text-muted">Enter a search term above</h5>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

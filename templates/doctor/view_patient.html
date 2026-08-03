@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12 d-flex justify-content-between align-items-center">
+        <h2><i class="bi bi-person-badge"></i> Patient Profile</h2>
+        <div>
+            <a href="{{ url_for('doctor.edit_patient', patient_id=patient.patient_id) }}" class="btn btn-warning text-white">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+            <a href="{{ url_for('doctor.new_prescription', preselect_patient=patient.patient_id) }}" class="btn btn-success">
+                <i class="bi bi-file-medical"></i> Prescribe
+            </a>
+            <button type="button" class="btn btn-danger text-white" data-bs-toggle="modal" data-bs-target="#deleteModal{{ patient.patient_id }}">
+                <i class="bi bi-trash"></i> Delete
+            </button>
+            <a href="{{ url_for('doctor.patients_list') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+        
+
+    </div>
+</div>
+
+<div class="row">
+    <!-- Left Column: Personal Info -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm h-100 border-primary border-top border-3">
+            <div class="card-body text-center">
+                <div class="display-1 text-primary mb-3">
+                    <i class="bi bi-person-circle"></i>
+                </div>
+                <h4 class="card-title">{{ patient.full_name }}</h4>
+                <p class="text-muted mb-1">{{ patient.patient_uid }}</p>
+                <span class="badge {% if patient.status == 'Active' %}bg-success{% else %}bg-danger{% endif %} mb-3">
+                    {{ patient.status }}
+                </span>
+                
+                <hr>
+                
+                <ul class="list-unstyled text-start">
+                    <li class="mb-2"><i class="bi bi-calendar-date text-primary me-2"></i> <strong>Age:</strong> {{ patient.age or 'N/A' }} yrs</li>
+                    <li class="mb-2"><i class="bi bi-gender-ambiguous text-primary me-2"></i> <strong>Gender:</strong> {{ patient.gender }}</li>
+                    <li class="mb-2"><i class="bi bi-droplet-fill text-danger me-2"></i> <strong>Blood Group:</strong> {{ patient.blood_group or 'Unknown' }}</li>
+                    <li class="mb-2"><i class="bi bi-telephone text-primary me-2"></i> <strong>Phone:</strong> {{ patient.phone }}</li>
+                    {% if patient.email %}
+                    <li class="mb-2"><i class="bi bi-envelope text-primary me-2"></i> <strong>Email:</strong> {{ patient.email }}</li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Medical & History -->
+    <div class="col-md-8 mb-4">
+        <ul class="nav nav-tabs mb-3" id="patientTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="medical-tab" data-bs-toggle="tab" data-bs-target="#medical" type="button" role="tab">Medical Details</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab">Prescription History</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab">Contact Info</button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="patientTabsContent">
+            <!-- Medical Details Tab -->
+            <div class="tab-pane fade show active" id="medical" role="tabpanel">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-sm-6">
+                                <h6>Height</h6>
+                                <p>{{ patient.height or '--' }} cm</p>
+                            </div>
+                            <div class="col-sm-6">
+                                <h6>Weight</h6>
+                                <p>{{ patient.weight or '--' }} kg</p>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <h6 class="text-danger"><i class="bi bi-exclamation-triangle"></i> Allergies</h6>
+                            <p class="bg-light p-2 rounded">{{ patient.allergies or 'None reported' }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <h6><i class="bi bi-heart-pulse text-warning"></i> Chronic Diseases</h6>
+                            <p class="bg-light p-2 rounded">{{ patient.chronic_diseases or 'None reported' }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <h6><i class="bi bi-file-earmark-medical text-info"></i> Past Medical History</h6>
+                            <p class="bg-light p-2 rounded">{{ patient.past_medical_history or 'No significant history provided' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Prescription History Tab -->
+            <div class="tab-pane fade" id="history" role="tabpanel">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Diagnosis</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for rx in prescriptions %}
+                                    <tr>
+                                        <td>{{ rx.created_at.strftime('%Y-%m-%d') }}</td>
+                                        <td>{{ rx.diagnosis }}</td>
+                                        <td>
+                                            <span class="badge {% if rx.status == 'Active' %}bg-primary{% else %}bg-secondary{% endif %}">
+                                                {{ rx.status }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('doctor.view_prescription', uuid=rx.uuid) }}" class="btn btn-sm btn-info text-white">View</a>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center py-3 text-muted">No prescriptions found.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contact Info Tab -->
+            <div class="tab-pane fade" id="contact" role="tabpanel">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <h6 class="border-bottom pb-2 mb-3">Address Details</h6>
+                        <p class="mb-1">{{ patient.address or 'No address provided' }}</p>
+                        {% if patient.city or patient.state or patient.pin_code %}
+                        <p class="text-muted">
+                            {{ patient.city }}{% if patient.city and patient.state %}, {% endif %}
+                            {{ patient.state }} {{ patient.pin_code }}
+                        </p>
+                        {% endif %}
+                        
+                        <h6 class="border-bottom pb-2 mb-3 mt-4 text-danger">Emergency Contact</h6>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <p class="mb-1 text-muted">Name</p>
+                                <strong>{{ patient.emergency_contact_name or 'Not provided' }}</strong>
+                            </div>
+                            <div class="col-sm-6">
+                                <p class="mb-1 text-muted">Number</p>
+                                <strong>{{ patient.emergency_contact_number or 'Not provided' }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal (Placed outside nested elements to prevent flickering) -->
+<div class="modal fade" id="deleteModal{{ patient.patient_id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ url_for('doctor.delete_patient', patient_id=patient.patient_id) }}" method="POST" onsubmit="this.querySelector('button[type=submit]').disabled = true; this.querySelector('button[type=submit]').innerHTML = 'Deleting...';">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Delete Patient: {{ patient.full_name }}</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-start">
+                    <div class="alert alert-warning text-dark">
+                        <strong><i class="bi bi-exclamation-triangle-fill"></i> Warning:</strong> This action is permanent. All related prescriptions, appointments, and QR records will also be deleted.
+                    </div>
+                    <p>Please enter your account password to confirm deletion.</p>
+                    <div class="mb-3">
+                        <input type="password" name="password" class="form-control" placeholder="Enter your password" required autocomplete="current-password">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Confirm Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

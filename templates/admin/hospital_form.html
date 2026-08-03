@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold text-dark mb-1">
+                        <i class="bi bi-building-add me-2"></i>
+                        {% if is_edit %}Edit Hospital Profile{% else %}Add New Hospital{% endif %}
+                    </h2>
+                    <p class="text-muted mb-0">{% if is_edit %}Update hospital details and branding{% else %}Register a new hospital entity{% endif %}</p>
+                </div>
+                <a href="{{ url_for('admin.hospitals') }}" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Back
+                </a>
+            </div>
+
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body p-4 p-md-5">
+                    <form method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <h5 class="fw-bold text-primary mb-4 border-bottom pb-2">Basic Information</h5>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                {{ form.name.label(class="form-label fw-bold text-secondary") }}
+                                {{ form.name(class="form-control rounded-3 bg-light border-0") }}
+                                {% for error in form.name.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.registration_number.label(class="form-label fw-bold text-secondary") }}
+                                {{ form.registration_number(class="form-control rounded-3 bg-light border-0") }}
+                                {% for error in form.registration_number.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-secondary">Hospital Logo</label>
+                            {% if hospital and hospital.logo_path %}
+                            <div class="mb-3">
+                                <img src="{{ url_for('static', filename='uploads/logos/' + hospital.logo_path) }}" alt="Current Logo" class="img-thumbnail rounded-3 shadow-sm" style="max-height: 100px;">
+                            </div>
+                            {% endif %}
+                            {{ form.logo(class="form-control rounded-3 bg-light border-0") }}
+                            <div class="form-text text-muted">Upload a high-quality logo (JPG, PNG). It will be displayed on dashboards and PDF prescriptions.</div>
+                            {% for error in form.logo.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <h5 class="fw-bold text-primary mb-4 border-bottom pb-2 mt-5">Contact Details</h5>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                {{ form.email.label(class="form-label fw-bold text-secondary") }}
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0"><i class="bi bi-envelope text-muted"></i></span>
+                                    {{ form.email(class="form-control rounded-end-3 bg-light border-0") }}
+                                </div>
+                                {% for error in form.email.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.phone.label(class="form-label fw-bold text-secondary") }}
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0"><i class="bi bi-telephone text-muted"></i></span>
+                                    {{ form.phone(class="form-control rounded-end-3 bg-light border-0") }}
+                                </div>
+                                {% for error in form.phone.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                {{ form.website.label(class="form-label fw-bold text-secondary") }}
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0"><i class="bi bi-globe text-muted"></i></span>
+                                    {{ form.website(class="form-control rounded-end-3 bg-light border-0") }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.emergency_contact.label(class="form-label fw-bold text-secondary") }}
+                                <div class="input-group">
+                                    <span class="input-group-text bg-danger bg-opacity-10 text-danger border-0"><i class="bi bi-telephone-fill"></i></span>
+                                    {{ form.emergency_contact(class="form-control rounded-end-3 bg-light border-0") }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <h5 class="fw-bold text-primary mb-4 border-bottom pb-2 mt-5">Location</h5>
+
+                        <div class="mb-4">
+                            {{ form.address.label(class="form-label fw-bold text-secondary") }}
+                            {{ form.address(class="form-control rounded-3 bg-light border-0", placeholder="Street Address") }}
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-4 mb-3 mb-md-0">
+                                {{ form.city.label(class="form-label fw-bold text-secondary") }}
+                                {{ form.city(class="form-control rounded-3 bg-light border-0") }}
+                            </div>
+                            <div class="col-md-4 mb-3 mb-md-0">
+                                {{ form.state.label(class="form-label fw-bold text-secondary") }}
+                                {{ form.state(class="form-control rounded-3 bg-light border-0") }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.postal_code.label(class="form-label fw-bold text-secondary") }}
+                                {{ form.postal_code(class="form-control rounded-3 bg-light border-0") }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            {{ form.country.label(class="form-label fw-bold text-secondary") }}
+                            {{ form.country(class="form-control rounded-3 bg-light border-0") }}
+                        </div>
+
+                        <div class="mb-4">
+                            {{ form.google_maps_url.label(class="form-label fw-bold text-secondary") }}
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0"><i class="bi bi-geo-alt text-muted"></i></span>
+                                {{ form.google_maps_url(class="form-control rounded-end-3 bg-light border-0", placeholder="Google Maps Share Link") }}
+                            </div>
+                        </div>
+
+                        <h5 class="fw-bold text-primary mb-4 border-bottom pb-2 mt-5">Additional Details</h5>
+                        
+                        <div class="mb-4">
+                            {{ form.working_hours.label(class="form-label fw-bold text-secondary") }}
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0"><i class="bi bi-clock text-muted"></i></span>
+                                {{ form.working_hours(class="form-control rounded-end-3 bg-light border-0", placeholder="e.g., Mon-Sat: 9:00 AM - 8:00 PM") }}
+                            </div>
+                        </div>
+
+                        <div class="mb-5">
+                            {{ form.description.label(class="form-label fw-bold text-secondary") }}
+                            {{ form.description(class="form-control rounded-3 bg-light border-0", rows="4") }}
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end pt-3 mt-4 border-top">
+                            <a href="{{ url_for('admin.hospitals') }}" class="btn btn-light rounded-pill px-4 me-md-2 fw-bold shadow-sm border">Cancel</a>
+                            {{ form.submit(class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow-sm") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
