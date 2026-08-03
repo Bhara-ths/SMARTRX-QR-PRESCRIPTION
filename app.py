@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, redirect
 from config import Config
 from extensions import db, login_manager, mail, csrf
 from flask_login import current_user
