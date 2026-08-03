@@ -82,7 +82,7 @@ def create_app(config_class=Config):
 
     @app.route('/')
     def index():
-        return "Landing Page - Welcome to QR Prescription System"
+        return redirect("/login")
 
     return app
 
